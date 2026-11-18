@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#05060a">
+<title>Hlas v slúchadle – Scéna v aute</title>
+<style>
+:root{
+  --bg:#05060a; --fg:rgba(255,255,255,.94); --fg2:rgba(255,255,255,.62); --fg3:rgba(255,255,255,.38);
+  --eva:#7fb6ff; --nik:#ffb86b; --oth:#c9c9d1; --acc:#ffd08a;
+  --glass:rgba(28,30,38,.46); --glass-hi:rgba(255,255,255,.10); --edge:rgba(255,255,255,.14);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:100%/1.5 var(--font);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-font-smoothing:antialiased}
+
+/* ---------- ambient scene layers ---------- */
+.scene{position:fixed;inset:-10%;opacity:0;transition:opacity 1.6s ease;pointer-events:none}
+.scene.on{opacity:1}
+#sc-car{background:
+  radial-gradient(60% 45% at 25% 30%, rgba(60,110,190,.35), transparent 70%),
+  radial-gradient(50% 40% at 80% 70%, rgba(30,60,120,.35), transparent 70%),
+  radial-gradient(40% 30% at 70% 20%, rgba(255,170,90,.10), transparent 70%), #05070d}
+#sc-office{background:radial-gradient(60% 45% at 30% 25%, rgba(170,210,200,.22), transparent 70%),radial-gradient(55% 45% at 75% 75%, rgba(90,120,150,.25), transparent 70%),#07090b}
+#sc-evening{background:radial-gradient(55% 40% at 70% 20%, rgba(70,90,160,.28), transparent 70%),radial-gradient(50% 40% at 20% 80%, rgba(30,40,80,.35), transparent 70%),#04050a}
+#sc-hall{background:
+  radial-gradient(55% 45% at 50% 25%, rgba(255,190,120,.30), transparent 70%),
+  radial-gradient(60% 50% at 20% 80%, rgba(170,110,60,.25), transparent 70%), #0b0806}
+#sc-hall{filter:sepia(.25)}
+canvas#rain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1.6s ease}
+canvas#rain.on{opacity:1}
+.vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,.65))}
+
+/* ---------- glass material ---------- */
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(28px) saturate(170%);backdrop-filter:blur(28px) saturate(170%);
+  border:1px solid var(--edge);box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 20px 50px rgba(0,0,0,.45)}
+
+/* ---------- top bar ---------- */
+#topbar{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-8px);display:flex;align-items:center;gap:10px;
+  padding:7px 8px 7px 16px;border-radius:999px;opacity:0;transition:opacity .5s, transform .5s;z-index:5}
+#topbar.on{opacity:1;transform:translateX(-50%)}
+#topbar .ch{font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--fg2);white-space:nowrap}
+#topbar{padding:6px 10px;gap:10px;overflow:hidden}
+#topbar .ch{padding:0 8px 0 6px}
+.ic{appearance:none;border:0;background:transparent;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--fg);transition:transform .1s ease-out, background .2s}
+.ic svg{width:19px;height:19px;fill:currentColor}
+.ic.main{background:rgba(255,255,255,.14)}
+.ic.main svg{width:21px;height:21px}
+.ic:active{transform:scale(.88);background:rgba(255,255,255,.2)}
+.ic .i-play{display:none}
+body.paused .ic .i-play{display:block}
+body.paused .ic .i-pause{display:none}
+body.paused #orb{opacity:.35}
+body.paused #subs{opacity:.75}
+#prog{position:absolute;left:18px;right:18px;bottom:2px;height:2px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}
+#prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),#ffb45e);transition:width .6s ease}
+.pill{appearance:none;border:0;background:var(--glass-hi);color:var(--fg);font:600 12px var(--font);padding:6px 11px;border-radius:999px;transition:transform .1s ease-out, background .2s}
+.pill:active{transform:scale(.94);background:rgba(255,255,255,.18)}
+
+/* ---------- speaker orb ---------- */
+#stage{position:fixed;left:0;right:0;top:30%;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+#orb{width:116px;height:116px;border-radius:50%;position:relative;opacity:0;transform:scale(.8);transition:opacity .8s, transform .8s}
+#orb.on{opacity:1;transform:scale(1)}
+#orb .core{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.9), var(--c,#888) 38%, rgba(0,0,0,.0) 72%);
+  filter:blur(.5px);transition:background .5s}
+#orb .halo{position:absolute;inset:-40px;border-radius:50%;background:radial-gradient(circle, var(--c,#888), transparent 65%);opacity:.35;filter:blur(18px);transition:background .5s}
+#who{margin-top:22px;font:700 12px var(--font);letter-spacing:.16em;text-transform:uppercase;color:var(--c,var(--fg2));opacity:0;transition:opacity .3s, color .4s}
+#who.on{opacity:1}
+
+/* ---------- subtitles ---------- */
+#subs{position:fixed;left:50%;bottom:max(14%,calc(env(safe-area-inset-bottom) + 90px));width:min(560px,calc(100% - 32px));transform:translateX(-50%);
+  border-radius:24px;padding:18px 22px;text-align:center;opacity:0;transition:opacity .35s, transform .35s}
+#subs.on{opacity:1}
+#subs p{margin:0;font:500 clamp(18px,4.6vw,22px)/1.38 var(--display);letter-spacing:-.012em;color:var(--fg)}
+#subs.thought p{font-style:italic;color:var(--fg2)}
+#subs.hide{opacity:0 !important}
+
+/* ---------- chapter title ---------- */
+#chapter{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0}
+#chapter .k{font:700 12px var(--font);letter-spacing:.24em;text-transform:uppercase;color:var(--fg3);margin-bottom:10px}
+#chapter .t{font:700 clamp(34px,9vw,54px)/1.02 var(--display);letter-spacing:-.03em}
+
+/* ---------- choice ---------- */
+#choice{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .35s}
+#choice.on{opacity:1;pointer-events:auto}
+#scrim{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.chip{position:absolute;max-width:min(44vw,240px);padding:12px 15px;border-radius:18px;font:600 15px/1.3 var(--font);letter-spacing:-.005em;color:var(--fg);
+  will-change:transform,opacity;transform-origin:center}
+.chip small{display:block;font:700 11px var(--font);letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin-bottom:3px}
+.chip.r{right:14px;top:50%;text-align:right}
+.chip.l{left:14px;top:50%;text-align:left}
+.chip.d{left:50%;bottom:max(7%,calc(env(safe-area-inset-bottom) + 24px));text-align:center;max-width:min(70vw,320px)}
+.chip.u{left:50%;top:max(9%,calc(env(safe-area-inset-top) + 64px));text-align:center;color:var(--fg2);font-weight:500}
+.chip.u small{color:var(--fg3)}
+#prompt{position:absolute;left:50%;top:22%;transform:translateX(-50%);width:min(520px,calc(100% - 40px));text-align:center;font:600 clamp(20px,5.2vw,26px)/1.25 var(--display);letter-spacing:-.02em}
+#prompt .q{display:block;font:700 11px var(--font);letter-spacing:.18em;text-transform:uppercase;color:var(--fg3);margin-bottom:10px}
+#puck{position:absolute;left:50%;top:52%;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;will-change:transform;touch-action:none}
+#puck .in{position:absolute;inset:6px;border-radius:50%;display:grid;place-items:center;color:rgba(255,255,255,.88);background:radial-gradient(circle at 50% 45%, rgba(255,255,255,.10), rgba(255,255,255,.02) 70%)}
+#puck .in svg{width:58%;height:58%}
+#puck .ringsvg{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);transform:rotate(-90deg)}
+#puck .ringsvg circle{fill:none;stroke:rgba(255,255,255,.75);stroke-width:2;stroke-dasharray:260 30;animation:ringspin 6s linear infinite}
+@keyframes ringspin{to{stroke-dashoffset:-290}}
+@media (prefers-reduced-motion: reduce){#puck .ringsvg circle{animation:none}}
+#choice .chip{opacity:0 !important;transition:opacity .25s ease}
+body.holding #choice .chip, body.kbd #choice .chip{opacity:1 !important}
+body.holding #hint{opacity:0}
+#hint{transition:opacity .25s}
+body.choosing #bBack, body.choosing #bFwd{opacity:.3;pointer-events:none}
+body.choosing #subs, body.choosing #orb, body.choosing #who{opacity:0 !important;transition:opacity .3s}
+
+#hint{position:absolute;left:50%;top:calc(52% + 62px);transform:translateX(-50%);font:500 13px var(--font);color:var(--fg3);white-space:nowrap}
+
+/* ---------- start / end cards ---------- */
+#start,#end,#pauseMenu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:6}
+.musicBtn{position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--fg,#fff);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.musicBtn.off{opacity:.45;text-decoration:line-through}
+.card{position:relative;width:min(420px,100%);border-radius:30px;padding:34px 28px 28px;text-align:center}
+.card .k{font:700 12px var(--font);letter-spacing:.22em;text-transform:uppercase;color:var(--fg3)}
+.card h1{margin:8px 0 6px;font:800 clamp(36px,10vw,46px)/1 var(--display);letter-spacing:-.035em}
+.card .sub{color:var(--fg2);font-size:16px;margin-bottom:22px}
+.howto{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:0 0 24px;text-align:left}
+.howto div{background:rgba(255,255,255,.06);border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.3;color:var(--fg2)}
+.howto b{display:block;color:var(--acc);font-size:17px;margin-bottom:2px}
+.cta{appearance:none;border:0;width:100%;padding:16px;border-radius:16px;background:linear-gradient(180deg,#ffd9a0,#ffb45e);color:#2a1700;
+  font:700 17px var(--font);letter-spacing:-.01em;box-shadow:0 10px 30px rgba(255,170,80,.25);transition:transform .1s ease-out, filter .1s}
+.cta:active{transform:scale(.97);filter:brightness(.95)}
+.note{margin-top:14px;font-size:12px;color:var(--fg3)}
+.menu{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+#pauseMenu .menu{margin-top:18px}
+body.inmenu #subs,body.inmenu #orb,body.inmenu #who{opacity:0 !important;pointer-events:none}
+.menu[hidden],.cta[hidden]{display:none}
+.cta.ghost{background:rgba(255,255,255,.08);color:var(--fg);box-shadow:none;border:1px solid rgba(255,255,255,.12)}
+.confirm{font:700 19px var(--display);margin:2px 0 6px;letter-spacing:-.01em}
+.confirm small{display:block;font:500 13px var(--font);color:var(--fg3);margin-top:6px}
+#pauseMenu{z-index:7;background:rgba(5,7,13,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+
+#warn{display:none;margin-top:12px;font-size:13px;color:#ffb08a}
+.summary{text-align:left;margin:4px 0 22px;display:flex;flex-direction:column;gap:8px}
+.summary .row{background:rgba(255,255,255,.06);border-radius:14px;padding:11px 13px;font-size:14px;line-height:1.35}
+.summary .row span{display:block;font:700 11px var(--font);letter-spacing:.1em;text-transform:uppercase;color:var(--fg3);margin-bottom:3px}
+.summary .row.secret{background:rgba(255,90,90,.10)}
+.summary .row.secret em{color:#ff9b9b;font-style:normal}
+.hidden{display:none !important}
+
+@media (prefers-reduced-motion: reduce){
+  .scene,#orb,#subs,#topbar,#choice{transition:opacity .2s !important}
+  canvas#rain{display:none}
+}
+@media (prefers-reduced-transparency: reduce){
+  .glass{background:rgba(24,26,32,.96);-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+</style>
+</head>
+<body>
+<div class="scene" id="sc-car"></div>
+<div class="scene" id="sc-hall"></div>
+<div class="scene" id="sc-office"></div>
+<div class="scene" id="sc-evening"></div>
+<canvas id="rain"></canvas>
+<div class="vignette"></div>
+
+<div id="topbar" class="glass">
+  <button class="ic" id="bBack" aria-label="Späť"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM19 5.5v13a.6.6 0 0 1-.92.5L9.5 12.5a.6.6 0 0 1 0-1L18.08 5a.6.6 0 0 1 .92.5z"/></svg></button>
+  <button class="ic main" id="bPlay" aria-label="Pauza"><svg viewBox="0 0 24 24" class="i-pause"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg><svg viewBox="0 0 24 24" class="i-play"><path d="M8 5.6v12.8a.8.8 0 0 0 1.2.7l10-6.4a.8.8 0 0 0 0-1.4l-10-6.4A.8.8 0 0 0 8 5.6z"/></svg></button>
+  <button class="ic" id="bFwd" aria-label="Ďalej"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM5 5.5v13a.6.6 0 0 0 .92.5l8.58-6.5a.6.6 0 0 0 0-1L5.92 5a.6.6 0 0 0-.92.5z"/></svg></button>
+  <span class="ch" id="chName" hidden></span>
+  <div id="prog"><i></i></div>
+</div>
+
+<div id="stage"><div id="orb"><div class="halo"></div><div class="core"></div></div><div id="who"></div></div>
+<div id="subs" class="glass"><p></p></div>
+<div id="chapter"><div class="k"></div><div class="t">Výjazd</div></div>
+
+<div id="choice">
+  <div id="scrim"></div>
+  <div id="prompt"><span class="q">Nikol · rozhodni sa</span><span class="txt"></span></div>
+  <div class="chip glass u" data-d="up"><small>↑ Hore</small><span>Zopakovať otázku</span></div>
+  <div class="chip glass l" data-d="left"><small>← Doľava</small><span></span></div>
+  <div class="chip glass r" data-d="right"><small>Doprava →</small><span></span></div>
+  <div class="chip glass d" data-d="down"><small>↓ Dole</small><span></span></div>
+  <div id="puck"><svg class="ringsvg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/></svg><div class="in"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+    <path d="M14 19c2-6 6-9 10-9s9 3 10 9"/><path d="M11 25c0-8 6-13 13-13s13 5 13 13v2"/><path d="M17 30c-1-2-1-4-1-6 0-5 4-8 8-8s8 3 8 8v4c0 3-1 6-3 9"/>
+    <path d="M20 37c1-3 2-6 2-9v-4c0-1 1-2 2-2s2 1 2 2v5c0 4-1 8-3 11"/><path d="M28 35c0 2-1 4-2 6"/><path d="M14 33c1 2 2 5 4 7"/><path d="M34 33c0 3-1 5-2 7"/></svg></div></div>
+  <div id="hint">Podrž prst a potiahni</div>
+</div>
+
+<div id="start">
+  <div class="card glass">
+    <div class="k">Audio detektívka</div>
+    <h1>Prípad Eva</h1>
+    <div class="sub">Kapitola 1 · Hlas v slúchadle</div>
+    <button class="musicBtn" id="musicBtn" aria-label="Hudba v pozadí">♪</button>
+    <div class="menu" id="menuMain">
+      <button class="cta" id="cont" hidden>Pokračovať</button>
+      <button class="cta" id="go">Začať novú hru</button>
+      <button class="cta ghost" id="scenesBtn">Vybrať scénu</button>
+    </div>
+    <div class="menu" id="menuScenes" hidden>
+      <div class="confirm">Vybrať scénu<small>Len na testovanie. Voľby pred scénou sa nezapočítajú.</small></div>
+      <div id="sceneList" style="display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto"></div>
+      <button class="cta ghost" id="scenesBack">Späť</button>
+    </div>
+    <div class="menu" id="menuConfirm" hidden>
+      <div class="confirm">Začať odznova?<small>Tvoj doterajší postup sa vymaže.</small></div>
+      <button class="cta" id="goYes">Áno, začať odznova</button>
+      <button class="cta ghost" id="goNo">Zrušiť</button>
+    </div>
+    <div class="note">🎧 Nasaď si slúchadlá a ponor sa do príbehu</div>
+    <div id="warn"></div>
+  </div>
+</div>
+
+<div id="pauseMenu" class="hidden">
+  <div class="card glass">
+    <div class="k">Prípad Eva</div>
+    <h1>Pauza</h1>
+    <div class="menu">
+      <button class="cta" id="pResume">Pokračovať v hre</button>
+      <button class="cta ghost" id="pSubs">Titulky: zapnuté</button>
+      <button class="cta ghost" id="pMusic">♪ Hudba: zapnutá</button>
+      <button class="cta ghost" id="pMenu">Hlavné menu</button>
+    </div>
+  </div>
+</div>
+
+<div id="end" class="hidden">
+  <div class="card glass">
+    <div class="k">Koniec ukážky</div>
+    <h1>Tej noci…</h1>
+    <div class="sub">zazvoní telefón.</div>
+    <div class="summary" id="sum"></div>
+    <button class="cta" id="again">Hrať znova</button>
+  </div>
+</div>
+
+<script>
+// ================= SCENÁR =================
+const SCRIPT = [
+  {t:'wait', ms:700},
+  {t:'dlg', id:'intro'},
+  {t:'wait', ms:1400},
+  {t:'chapter', k:'', text:'Výjazd'},
+  {t:'wait', ms:2200},
+  {t:'dlg', id:'s1_blok1'},
+  {t:'amb', scene:'car'},
+  {t:'wait', ms:900},
+  {t:'dlg', id:'navod'},
+  {t:'wait', ms:700},
+  {t:'choice', id:'c1', label:'Reakcia na tlačidlák',
+    q:{who:'nikolT', id:'q1', text:'Mám sa priznať? Vrátiť jej to?'},
+    opts:{
+      right:{label:'Priznať sa', value:'úprimná', then:[
+        {t:'say', who:'nikol', text:'Smej sa, smej. Stratila som mobil.'},
+        {t:'say', who:'eva', text:'Ty? Ty si pamätáš evidenčné číslo každého auta, ktoré na nás za posledný rok trúbilo. Ale mobil stratíš.'},
+        {t:'say', who:'nikol', text:'Hej. Aj mňa to prekvapilo.'} ]},
+      left:{label:'Vrátiť jej to', value:'drzá', then:[
+        {t:'say', who:'nikol', text:'Aspoň mi naň o jednej v noci nepíše chalan z Tinderu „si hore?“.'},
+        {t:'say', who:'eva', text:'Au. Okej, to bolo pod pás. Tak čo sa stalo?'} ]}
+    }},
+  {t:'say', who:'nikol', text:'Včera. Na tom školení o kyberkriminalite.'},
+  {t:'sfx', name:'whoosh'}, {t:'amb', scene:'hall'}, {t:'wait', ms:2200},
+  {t:'say', who:'lektor', text:'A pamätajte si jedno. Váš mobil je ten najlepší špión, akého si môžete kúpiť. Vie, kde spíte, s kým píšete a čoho sa bojíte. A nosíte ho stále pri sebe.'},
+  {t:'wait', ms:400},
+  {t:'say', who:'lektor', text:'Desať minút prestávka. Káva je vzadu. A nie, nie je zadarmo.'},
+  {t:'sfx', name:'laugh'}, {t:'wait', ms:1700}, {t:'sfx', name:'crowdUp'}, {t:'sfx', name:'cups'}, {t:'wait', ms:1400},
+  {t:'say', who:'nikolT', text:'Mobil som mala vo vrecku saka. Ešte som naň pozerala. Pätnásť percent baterky a nula správ.'},
+  {t:'wait', ms:1600},
+  {t:'sfx', name:'whoosh'}, {t:'amb', scene:'car'}, {t:'wait', ms:1800},
+  {t:'dlg', id:'s1_navrat'},
+  {t:'choice', id:'c2', label:'Bol tam Šimon?',
+    q:{who:'nikolT', id:'q2', text:'Šimon… Mám jej povedať pravdu? Alebo nie?'},
+    opts:{
+      right:{label:'Pravda', value:'Šimon tam bol', then:[
+        {t:'say', who:'nikol', text:'Bol tam. A furt na mňa zazeral s tým jeho slizkým pohľadom.', early:1.0} ]},
+      left:{label:'Nepravda', value:'zatajila Šimona', then:[
+        {t:'say', who:'nikol', text:'Neviem, Evka. Nevšímala som si to. Bola som unavená.', early:1.0} ]}
+    }},
+  {t:'amb', scene:'none'},
+  {t:'dlg', id:'s1_zaver'},
+  {t:'wait', ms:1500},
+  // ================= SCÉNA 2: STANICA =================
+  {t:'chapter', k:'', text:'Stanica'},
+  {t:'amb', scene:'none'},
+  {t:'dlg', id:'s2_partA', cues:[{at:7.5, vis:'office'}]},
+  {t:'amb', scene:'officeLow'},
+  {t:'choice', id:'c4', label:'Reakcia na Evu (stanica)',
+    q:{who:'nikolT', id:'s2_otazka', text:'Priznám to? Vrátim jej to? Alebo ju budem ignorovať?'},
+    opts:{
+      right:{label:'Priznať to', value:'priznala', then:[ {t:'dlg', id:'s2_vetva_priznat'} ]},
+      left:{label:'Vrátiť jej to', value:'vrátila jej to', then:[ {t:'dlg', id:'s2_vetva_vratit'} ]},
+      down:{label:'Ignorovať ju', value:'ignorovala', then:[]}
+    }},
+  {t:'wait', ms:600},
+  {t:'amb', scene:'none'},
+  {t:'dlg', id:'s2_partB'},
+  {t:'wait', ms:800},
+  {t:'play', name:'timepass', tail:1.2, fallbackMs:2000, scene:'evening'},
+  {t:'wait', ms:0, mark:'vecer'},
+  {t:'wait', ms:2200},
+  {t:'amb', scene:'none'},
+  {t:'dlg', id:'s2_vecer_scena'},
+  {t:'wait', ms:2500},
+  // ================= KAPITOLA 3: HOVOR O 1:47 =================
+  {t:'chapter', k:'', text:'Hovor o 1:47'},
+  {t:'wait', ms:1200},
+  {t:'dlg', id:'s3_intro'},
+  {t:'amb', scene:'night'},
+  {t:'choice', id:'k3a', label:'Policajtka, alebo kamarátka?',
+    q:{who:'nikolT', id:'k3_uvod_q', text:'Čo jej mám povedať? Pomôžem jej, ako bude treba? Alebo jej poradím, aby sa prihlásila? Alebo si to radšej aj nahrám?'},
+    opts:{
+      right:{label:'Pomôžem ti', value:'pomôže Eve', then:[ {t:'amb', scene:'none'}, {t:'dlg', id:'s3_a1x'}, {t:'amb', scene:'night'} ]},
+      left:{label:'Musíš sa prihlásiť', value:'chcela, aby sa prihlásila', then:[ {t:'amb', scene:'none'}, {t:'dlg', id:'s3_a2x'}, {t:'amb', scene:'night'} ]},
+      down:{label:'Sľúbiť a nahrávať', value:'tajne nahráva hovor', then:[ {t:'amb', scene:'none'}, {t:'dlg', id:'s3_a3x'}, {t:'amb', scene:'night'} ]}
+    }},
+  {t:'choice', id:'k3b', label:'Obálka',
+    q:{who:'nikolT', id:'k3_obalka_q', text:'Zoberiem ju? Alebo by som sa mala najskôr pozrieť, čo v nej je? Alebo ju tu proste nechám?'},
+    opts:{
+      right:{label:'Zobrať ju', value:'obálku zobrala neotvorenú', then:[ {t:'amb', scene:'none'}, {t:'dlg', id:'s3_2_1x'}, {t:'amb', scene:'night'} ]},
+      left:{label:'Otvoriť ju', value:'obálku otvorila', then:[ {t:'amb', scene:'none'}, {t:'dlg', id:'s3_2_2x'}, {t:'amb', scene:'night'} ]},
+      down:{label:'Nechať ju u babky', value:'obálku nechala u babky', then:[ {t:'amb', scene:'none'}, {t:'dlg', id:'s3_2_3x'}, {t:'amb', scene:'night'} ]}
+    }},
+  {t:'choice', id:'k3c', label:'Babka',
+    q:{who:'nikolT', id:'k3_odchod_q', text:'Poviem jej pravdu alebo si niečo vymyslím?'},
+    opts:{
+      right:{label:'Služba', value:'babke zaklamala', then:[ {t:'dlg', id:'k3_sluzba'} ]},
+      left:{label:'Eva má problém', value:'babke povedala pravdu', then:[ {t:'dlg', id:'k3_pravda'} ]}
+    }},
+  {t:'amb', scene:'none'},
+  {t:'dlg', id:'k3_zaver'},
+  {t:'wait', ms:2500},
+  {t:'end'},
+];
+
+// ================= HLASY =================
+const ROLES = {
+  eva:    {name:'Eva',        color:'#7fb6ff', pitch:1.3,  rate:1.05, vol:1,   slot:1},
+  nikol:  {name:'Nikol',      color:'#ffb86b', pitch:0.95, rate:1.0,  vol:1,   slot:0},
+  nikolT: {name:'Nikol · v duchu', color:'#ffb86b', pitch:0.9, rate:0.92, vol:0.75, slot:0, thought:true},
+  lektor: {name:'Lektor',     color:'#d6c7b0', pitch:0.55, rate:0.95, vol:1,   slot:2},
+  muz:    {name:'Neznámy muž',color:'#c9c9d1', pitch:0.7,  rate:1.05, vol:1,   slot:3},
+  lucy:   {name:'Lucy',       color:'#c4a6ff', pitch:1.05, rate:0.92, vol:1, slot:1},
+  kollar: {name:'Kollár',     color:'#9fd3a8', pitch:0.7,  rate:0.95, vol:1, slot:2},
+  babka:  {name:'Babka',      color:'#e6c9a8', pitch:0.85, rate:0.9, vol:1, slot:3},
+  guide:  {name:'Sprievodca', color:'#e8e2d4', pitch:0.6, rate:0.95, vol:1, slot:2},
+  disp:   {name:'Centrála',   color:'#9fe3c1', pitch:0.8,  rate:1.12, vol:0.9, slot:2},
+  sys:    {name:'',           color:'#ffd08a', pitch:1.0,  rate:1.15, vol:0.8, slot:0}
+};
+let voices=[], langUsed='sk-SK';
+function loadVoices(){ return new Promise(res=>{ const pick=()=>{ const all=speechSynthesis.getVoices(); let l=all.filter(v=>/^sk/i.test(v.lang));
+  if(!l.length){ l=all.filter(v=>/^cs/i.test(v.lang)); if(l.length) langUsed='cs-CZ'; } voices=l; return all.length>0; };
+  if(pick()) return res(); speechSynthesis.onvoiceschanged=()=>{pick();res();}; setTimeout(()=>{pick();res();},1800); }); }
+const voiceFor=r=>voices.length?voices[ROLES[r].slot%voices.length]:null;
+
+// ================= AUDIO (ambience + SFX) =================
+let ctx, master, buses={}, reverb, WHITE, BROWN, PINK;
+let plipTimer=null, murmurTimer=null, wiperTimer=null, crowdDensity=0.5, ambDuck=null;
+function gain(v){ const g=ctx.createGain(); g.gain.value=v; return g; }
+function filt(type,f,q=0.7,g=0){ const n=ctx.createBiquadFilter(); n.type=type; n.frequency.value=f; n.Q.value=q; n.gain.value=g; return n; }
+function makeNoise(type,sec=4){ const len=Math.floor(ctx.sampleRate*sec), b=ctx.createBuffer(1,len,ctx.sampleRate), d=b.getChannelData(0);
+  let last=0, b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+  for(let i=0;i<len;i++){ const w=Math.random()*2-1;
+    if(type==='brown'){ last=(last+0.02*w)/1.02; d[i]=last*3.5; }
+    else if(type==='pink'){ b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759; b2=0.969*b2+w*0.153852; b3=0.8665*b3+w*0.3104856; b4=0.55*b4+w*0.5329522; b5=-0.7616*b5-w*0.016898; d[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11; b6=w*0.115926; }
+    else d[i]=w; }
+  return b; }
+function noiseSrc(buf){ const s=ctx.createBufferSource(); s.buffer=buf; s.loop=true; s.start(0,Math.random()*buf.duration); return s; }
+function makeReverb(sec=2.4,decay=3){ const len=Math.floor(ctx.sampleRate*sec), b=ctx.createBuffer(2,len,ctx.sampleRate);
+  for(let c=0;c<2;c++){ const d=b.getChannelData(c); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay); }
+  const cv=ctx.createConvolver(); cv.buffer=b; return cv; }
+
+// Rain on a car roof, heard from inside: thousands of tiny impacts on a thin
+// metal panel. Pre-rendered once (stereo, seamless loop) instead of filtered hiss.
+function makeRoofRain(sec=8){
+  const sr=ctx.sampleRate, len=Math.floor(sr*sec), b=ctx.createBuffer(2,len,sr);
+  for(let ch=0;ch<2;ch++){ const d=b.getChannelData(ch);
+    const drop=(t,amp,durMs,tone)=>{ const n=Math.floor(durMs*sr/1000); const w=2*Math.PI*tone/sr;
+      for(let i=0;i<n;i++){ const k=(t+i)%len; const env=Math.exp(-i/(n*0.22)); const a=Math.min(1,i/(n*0.12)); d[k]+=amp*env*a*((Math.random()*2-1)*0.3+Math.sin(w*i)*0.7); } };
+    const small=sec*2600, big=sec*55;
+    for(let i=0;i<small;i++) drop(Math.floor(Math.random()*len), 0.01+Math.random()*0.022, 5+Math.random()*7, 380+Math.random()*700);
+    for(let i=0;i<big;i++)   drop(Math.floor(Math.random()*len), 0.05+Math.random()*0.08, 14+Math.random()*18, 140+Math.random()*160);
+    let peak=0; for(let i=0;i<len;i++) peak=Math.max(peak,Math.abs(d[i])); for(let i=0;i<len;i++) d[i]/=peak*1.15; }
+  return b; }
+
+function initAudio(){
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-18; comp.knee.value=18; comp.ratio.value=2; comp.attack.value=0.02; comp.release.value=0.35;
+  const warm=filt('lowshelf',160,0.7,1.5), air=filt('highshelf',8000,0.7,-2.5); master=gain(0.95); master.connect(warm); warm.connect(air); air.connect(comp); comp.connect(ctx.destination);
+  buses.studio=makeReverb(0.45,4); const stG=gain(0.5); buses.studio.connect(stG); stG.connect(master);
+  WHITE=makeNoise('white'); BROWN=makeNoise('brown'); PINK=makeNoise('pink');
+  reverb=makeReverb(); const rvG=gain(0.55); reverb.connect(rvG); rvG.connect(master);
+  const ambTone=filt('highshelf',5000,0.7,-6); const amb=gain(0.8); amb.connect(ambTone); ambTone.connect(master); ambDuck=amb;   // ambience bus – ducks under dialogue
+
+  // ---------- CAR (inside, rain) ----------
+  const car=gain(0); car.connect(amb); buses.car=car;
+  // cabin: low road/body rumble of a parked car in rain
+  const cab=noiseSrc(BROWN), cabF=filt('lowpass',140), cabG=gain(0.22); cab.connect(cabF); cabF.connect(cabG); cabG.connect(car);
+  // roof rain: muffled by the headliner – no hiss above ~3 kHz, a little body around 300 Hz
+  const rf1=filt('lowpass',1700,0.5), rf3=filt('highpass',90), roofG=gain(0.3); rf1.connect(rf3); rf3.connect(roofG); roofG.connect(car); buses.rainIn=rf1;
+  const wip=gain(0); wip.connect(car); buses.wipers=wip;
+  // engine idle (off until the engine starts)
+  const eng=ctx.createOscillator(); eng.type='sawtooth'; eng.frequency.value=31;
+  const eng2=ctx.createOscillator(); eng2.type='triangle'; eng2.frequency.value=62.3;
+  const ef=filt('lowpass',105), eg=gain(0); eng.connect(ef); eng2.connect(ef); ef.connect(eg); eg.connect(car); eng.start(); eng2.start(); buses.engine=eg;
+
+  // ---------- LECTURE HALL (flashback – dry, no rain) ----------
+  const hall=gain(0); hall.connect(amb); buses.hall=hall;
+  const hallWet=gain(0.9); hallWet.connect(reverb); buses.hallWet=hallWet;
+  const room=noiseSrc(BROWN), roomF=filt('lowpass',180), roomG=gain(0.07); room.connect(roomF); roomF.connect(roomG); roomG.connect(hall);
+  const crowd=gain(0.6); crowd.connect(hall); crowd.connect(hallWet); buses.crowd=crowd;
+  const chat=gain(0); chat.connect(hall); buses.chat=chat;
+  // ---------- POLICE STATION ----------
+  buses.idle=gain(0); buses.idle.connect(master); buses.office=gain(0); buses.office.connect(amb); buses.evening=gain(0); buses.evening.connect(amb); buses.night=gain(0); buses.night.connect(amb);
+}
+let officeStarted=false, eveningStarted=false;
+function ensureLoop(name,bus,flag){ if(window[flag]||!SFXBUF[name]) return; window[flag]=true; loopBuf(SFXBUF[name],bus); }
+let rainStarted=false, chatStarted=false;
+function loopBuf(buf,dest){ const s=ctx.createBufferSource(); s.buffer=buf; s.loop=true; s.loopStart=0.05; s.loopEnd=buf.duration-0.05; s.connect(dest); s.start(0,Math.random()*Math.max(0.1,buf.duration-1)); return s; }
+function ensureRain(){ if(rainStarted) return; rainStarted=true;
+  if(SFXBUF.rain){ loopBuf(SFXBUF.rain,buses.rainIn); }
+  else { const r=ctx.createBufferSource(); r.buffer=makeRoofRain(); r.loop=true; const lp=filt('lowpass',1300,0.5); r.connect(lp); lp.connect(buses.rainIn); r.start(); } }
+function ensureChat(){ if(chatStarted||!SFXBUF.chatter) return; chatStarted=true; loopBuf(SFXBUF.chatter,buses.chat); }
+const fadeTo=(node,v,t=1.2)=>{ node.gain.cancelScheduledValues(ctx.currentTime); node.gain.setTargetAtTime(v,ctx.currentTime,t/3); };
+
+// windscreen drops: a soft "plip" with a little thud, panned in front of you
+function plip(){ const t=ctx.currentTime, s=ctx.createBufferSource(); s.buffer=WHITE;
+  const f=filt('lowpass',700+Math.random()*400,0.7), g=gain(0), p=ctx.createStereoPanner?ctx.createStereoPanner():null;
+  s.connect(f); f.connect(g); if(p){ p.pan.value=Math.random()*1.4-0.7; g.connect(p); p.connect(buses.car); } else g.connect(buses.car);
+  const a=0.012+Math.random()*0.025; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(a,t+0.008); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05+Math.random()*0.05);
+  s.start(t,Math.random()*3,0.12);
+  const o=ctx.createOscillator(), og=gain(0); o.frequency.setValueAtTime(170+Math.random()*90,t); o.frequency.exponentialRampToValueAtTime(90,t+0.06);
+  o.connect(og); og.connect(p||buses.car); og.gain.setValueAtTime(a*0.6,t); og.gain.exponentialRampToValueAtTime(0.0001,t+0.07); o.start(t); o.stop(t+0.08); }
+function schedulePlips(){ clearTimeout(plipTimer); const loop=()=>{ plip(); plipTimer=setTimeout(loop,450+Math.random()*1100); }; loop(); }
+
+// crowd murmur in the hall: real voice fragments, pitched and muffled into a room of people talking
+function murmur(){ const ids=Object.keys(typeof BUF!=='undefined'?BUF:{}); if(!ids.length) return;
+  const b=BUF[ids[Math.floor(Math.random()*ids.length)]]; const len=0.6+Math.random()*1.2; if(b.duration<len+0.2) return;
+  const t=ctx.currentTime, s=ctx.createBufferSource(); s.buffer=b; s.playbackRate.value=0.78+Math.random()*0.4;
+  const f=filt('lowpass',900+Math.random()*500,0.6), g=gain(0), p=ctx.createStereoPanner?ctx.createStereoPanner():null;
+  s.connect(f); f.connect(g); if(p){ p.pan.value=Math.random()*2-1; g.connect(p); p.connect(buses.crowd); } else g.connect(buses.crowd);
+  const a=0.05+Math.random()*0.05; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(a,t+0.15); g.gain.setValueAtTime(a,t+len-0.2); g.gain.linearRampToValueAtTime(0,t+len);
+  s.start(t,Math.random()*(b.duration-len),len); }
+function scheduleMurmur(){ clearTimeout(murmurTimer); const loop=()=>{ murmur(); murmurTimer=setTimeout(loop,(420+Math.random()*500)/(0.4+crowdDensity)); }; loop(); }
+
+function setScene(s){
+  clearTimeout(plipTimer); clearTimeout(murmurTimer);
+  if(s==='car'){ ensureRain(); ensureLoop('idle',buses.idle,'_idleL'); fadeTo(buses.idle,1,0.6); fadeTo(buses.car,1,1.6); fadeTo(buses.hall,0,0.8); if(!SFXBUF.rain) schedulePlips(); }
+  else if(s==='hall'){ fadeTo(buses.idle,0,0.6); fadeTo(buses.car,0,0.6); fadeTo(buses.hall,1,1.6); crowdDensity=0.35; ensureChat();
+    if(SFXBUF.chatter){ fadeTo(buses.chat,0.12,1); fadeTo(buses.crowd,0,0.3); } else { fadeTo(buses.crowd,0.45,0.5); scheduleMurmur(); } }
+  else if(s==='office'){ fadeTo(buses.idle,0,1); ensureLoop('office',buses.office,'_offL'); fadeTo(buses.car,0,1.2); fadeTo(buses.hall,0,0.8); fadeTo(buses.evening,0,1); fadeTo(buses.office,0.55,1.5); fadeTo(buses.engine,0,0.8); clearInterval(wiperTimer); if(buses.wipers) fadeTo(buses.wipers,0,0.5); }
+  else if(s==='officeLow'){ ensureLoop('office',buses.office,'_offL'); fadeTo(buses.office,0.28,1.2); }
+  else if(s==='night'){ ensureLoop('k3room',buses.night,'_nightL'); fadeTo(buses.idle,0,1); fadeTo(buses.car,0,1); fadeTo(buses.office,0,1.5); fadeTo(buses.evening,0,1.5); fadeTo(buses.night,0.55,2.5); }
+  else if(s==='evening'){ ensureLoop('evening',buses.evening,'_eveL'); fadeTo(buses.office,0,2.5); fadeTo(buses.evening,0.6,2.5); }
+  else { fadeTo(buses.idle,0,(s==='none'&&typeof Q!=='undefined'&&Q[ip+1]&&Q[ip+1].t==='dlg')?0.4:2.5); fadeTo(buses.car,0,2.5); fadeTo(buses.hall,0,2.5); fadeTo(buses.engine,0,2.5); fadeTo(buses.office,0,2.5); fadeTo(buses.evening,0,2.5); if(buses.night) fadeTo(buses.night,0,2.5); clearInterval(wiperTimer); }
+  if(s==='car'){ fadeTo(buses.office,0,1); fadeTo(buses.evening,0,1.2); }
+}
+// ambience dips gently while someone speaks, like a real mix
+function startDucking(levelFn){ setInterval(()=>{ if(!ctx||!ambDuck) return; const l=Math.min(1,levelFn()); const base=0.8; ambDuck.gain.setTargetAtTime(base*(1-0.2*Math.min(1,l*1.6)),ctx.currentTime,0.18); },60); }
+
+function burst(dest,{f=1000,type='bandpass',q=1,a=0.3,dur=0.1,attack=0.005,pan=0,delay=0}){
+  const t=ctx.currentTime+delay, s=ctx.createBufferSource(); s.buffer=WHITE; const fl=filt(type,f,q); const g=gain(0);
+  let out=g; if(ctx.createStereoPanner){ const p=ctx.createStereoPanner(); p.pan.value=pan; g.connect(p); out=p; }
+  s.connect(fl); fl.connect(g); out.connect(dest||master);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(a,t+attack); g.gain.exponentialRampToValueAtTime(0.0001,t+attack+dur); s.start(t,Math.random()*3,attack+dur+0.05); }
+function tone(f,{a=0.2,dur=0.15,type='sine',delay=0,dest,pan=0,decay=true}={}){
+  const t=ctx.currentTime+delay, o=ctx.createOscillator(); o.type=type; o.frequency.value=f; const g=gain(0);
+  let out=g; if(ctx.createStereoPanner){ const p=ctx.createStereoPanner(); p.pan.value=pan; g.connect(p); out=p; }
+  o.connect(g); out.connect(dest||master); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(a,t+0.005);
+  if(decay) g.gain.exponentialRampToValueAtTime(0.0001,t+dur); else { g.gain.setValueAtTime(a,t+dur-0.01); g.gain.linearRampToValueAtTime(0,t+dur); }
+  o.start(t); o.stop(t+dur+0.05); }
+function wiper(){ const t=ctx.currentTime; [0,0.95].forEach((d,i)=>{
+  // rubber blade dragging over wet glass, then the soft thunk at the end of the stroke
+  const s=ctx.createBufferSource(); s.buffer=PINK; const f=filt('bandpass',520,0.9), f2=filt('peaking',1500,2,5), g=gain(0);
+  let out=g; if(ctx.createStereoPanner){ const p=ctx.createStereoPanner(); p.pan.setValueAtTime(i?0.5:-0.5,t+d); p.pan.linearRampToValueAtTime(i?-0.5:0.5,t+d+0.75); g.connect(p); out=p; }
+  s.connect(f); f.connect(f2); f2.connect(g); out.connect(buses.car); g.gain.setValueAtTime(0,t+d); g.gain.linearRampToValueAtTime(0.05,t+d+0.18); g.gain.linearRampToValueAtTime(0.0,t+d+0.8); s.start(t+d,Math.random()*2,0.9);
+  burst(buses.car,{f:160,type:'lowpass',a:0.12,dur:0.08,delay:d+0.8,pan:i?-0.5:0.5}); }); }
+const SFX={
+  rustle(){ for(let i=0;i<12;i++) burst(master,{f:1800+Math.random()*2200,q:0.7,a:0.035+Math.random()*0.05,dur:0.05+Math.random()*0.08,delay:i*0.07+Math.random()*0.05,pan:0.3}); },
+  keypad(){ const dt=[[697,1209],[770,1336],[852,1477],[697,1336]];
+    dt.forEach((k,i)=>{ tone(k[0],{a:0.035,dur:0.11,delay:i*0.28,decay:false,pan:0.25}); tone(k[1],{a:0.035,dur:0.11,delay:i*0.28,decay:false,pan:0.25}); burst(master,{f:3500,q:2,a:0.03,dur:0.01,delay:i*0.28,pan:0.25}); }); },
+  whoosh(){ const t=ctx.currentTime, s=ctx.createBufferSource(); s.buffer=PINK; const f=filt('bandpass',200,1.1); const g=gain(0);
+    s.connect(f); f.connect(g); g.connect(master); f.frequency.setValueAtTime(150,t); f.frequency.exponentialRampToValueAtTime(2400,t+0.9); f.frequency.exponentialRampToValueAtTime(120,t+1.8);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.22,t+0.8); g.gain.linearRampToValueAtTime(0,t+1.8); s.start(t,0,2);
+    tone(110,{a:0.05,dur:1.8}); tone(164.8,{a:0.035,dur:1.8,delay:0.1}); },
+  crowdUp(){ crowdDensity=1; if(SFXBUF.chatter) fadeTo(buses.chat,0.55,1.6); else fadeTo(buses.crowd,0.8,1.2); },
+  laugh(){ if(!SFXBUF.laugh) return; const s=ctx.createBufferSource(); s.buffer=SFXBUF.laugh; const g=gain(0.75); s.connect(g); g.connect(buses.hall); g.connect(buses.hallWet); s.start(); },
+  steps(){ for(let i=0;i<6;i++){ burst(buses.hall,{f:170,type:'lowpass',a:0.28,dur:0.07,delay:i*0.48,pan:(i%2?0.2:-0.2)}); burst(buses.hallWet,{f:2200,q:2,a:0.03,dur:0.02,delay:i*0.48+0.01}); } },
+  cups(){ for(let i=0;i<3;i++){ const d=Math.random()*1.2; tone(2600+Math.random()*1600,{a:0.03,dur:0.3,delay:d,dest:buses.hall,pan:Math.random()-.5}); tone(5000+Math.random()*800,{a:0.012,dur:0.18,delay:d,dest:buses.hallWet}); } },
+  bumpSynth(){ burst(master,{f:240,type:'lowpass',a:0.5,dur:0.16,pan:0.4}); const t=ctx.currentTime,o=ctx.createOscillator(),g=gain(0); o.frequency.setValueAtTime(110,t); o.frequency.exponentialRampToValueAtTime(45,t+0.2); o.connect(g); g.connect(master); g.gain.setValueAtTime(0.35,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.25); o.start(t); o.stop(t+0.3);
+    burst(master,{f:2600,q:0.7,a:0.07,dur:0.22,delay:0.05,pan:0.4}); },
+  radio(){ tone(1250,{a:0.05,dur:0.09,decay:false}); burst(master,{f:1800,q:0.8,a:0.1,dur:0.3,delay:0.1,attack:0.01}); },
+  radioEnd(){ burst(master,{f:1800,q:0.8,a:0.11,dur:0.22,attack:0.01}); tone(900,{a:0.045,dur:0.08,delay:0.26,decay:false}); },
+  engineStart(){ const t=ctx.currentTime;
+    if(SFXBUF.engine){ const s=ctx.createBufferSource(); s.buffer=SFXBUF.engine; const g=gain(0.8); s.connect(g); g.connect(buses.car); s.start();
+      const d=SFXBUF.engine.duration; g.gain.setValueAtTime(0.8,t+Math.max(0.5,d-1.2)); g.gain.linearRampToValueAtTime(0,t+d);
+      buses.engine.gain.setValueAtTime(0,t+Math.max(0.5,d-1.4)); buses.engine.gain.linearRampToValueAtTime(0.08,t+d);
+      if(SFXBUF.wipers){ setTimeout(()=>{ loopBuf(SFXBUF.wipers,buses.wipers); fadeTo(buses.wipers,0.35,1.5); },1600); }
+      else { clearInterval(wiperTimer); setTimeout(()=>{ wiper(); wiperTimer=setInterval(wiper,2700); },1800); }
+      return; }
+    for(let i=0;i<7;i++) burst(buses.car,{f:200,type:'lowpass',a:0.32,dur:0.09,delay:i*0.12});
+    buses.engine.gain.setValueAtTime(0,t+0.85); buses.engine.gain.linearRampToValueAtTime(0.26,t+1.0); buses.engine.gain.setTargetAtTime(0.11,t+1.2,0.4);
+    clearInterval(wiperTimer); setTimeout(()=>{ wiper(); wiperTimer=setInterval(wiper,2700); },1800); },
+  indicator(){ for(let i=0;i<10;i++){ burst(buses.car,{f:3200,q:3,a:0.07,dur:0.015,delay:i*0.38,pan:-0.5}); burst(buses.car,{f:1700,q:3,a:0.05,dur:0.015,delay:i*0.38+0.19,pan:-0.5}); } },
+  // collision: play the recording, then let it die away right after the impact so no footsteps run under the dialogue
+  bump(){ if(!SFXBUF.bump) return SFX.bumpSynth(); const t=ctx.currentTime, s=ctx.createBufferSource(); s.buffer=SFXBUF.bump; const g=gain(0.9); s.connect(g); g.connect(buses.hall); g.connect(buses.hallWet); s.start(t);
+    /* short take: impact ~1.25 s, cup + coffee follow; let it finish naturally under the dialogue (ducked) */ },
+  // decision moment: a cue, a tense bed under the question, a satisfying hit on commit
+  choiceIn(){ if(SFXBUF.cue){ const s=ctx.createBufferSource(); s.buffer=SFXBUF.cue; const g=gain(0.7); s.connect(g); g.connect(master); s.start(); }
+    else { const t=ctx.currentTime, o=ctx.createOscillator(), g=gain(0); o.frequency.setValueAtTime(70,t); o.frequency.exponentialRampToValueAtTime(42,t+0.35); o.connect(g); g.connect(master); g.gain.setValueAtTime(0.5,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.5); o.start(t); o.stop(t+0.6);
+      tone(880,{a:0.03,dur:1.2,delay:0.15}); tone(1318,{a:0.02,dur:1.4,delay:0.25}); }
+    if(ambDuck) ambDuck.gain.setTargetAtTime(0.35,ctx.currentTime,0.4); },
+  tensionOn(){ if(!buses.tension){ buses.tension=gain(0); buses.tension.connect(master);
+      if(SFXBUF.tension) loopBuf(SFXBUF.tension,buses.tension);
+      else { const o1=ctx.createOscillator(), o2=ctx.createOscillator(), f=filt('lowpass',420,1), lfo=ctx.createOscillator(), lg=gain(0.25);
+        o1.type='sawtooth'; o2.type='sawtooth'; o1.frequency.value=55; o2.frequency.value=55.4; lfo.frequency.value=1.1; lfo.connect(lg);
+        const v=gain(0.12); lg.connect(v.gain); o1.connect(f); o2.connect(f); f.connect(v); v.connect(buses.tension); o1.start(); o2.start(); lfo.start(); } }
+    fadeTo(buses.tension,0.5,1.8); },
+  tensionOff(){ if(buses.tension) fadeTo(buses.tension,0,0.6); },
+  choicePick(){ if(SFXBUF.pick){ const s=ctx.createBufferSource(); s.buffer=SFXBUF.pick; const g=gain(0.75); s.connect(g); g.connect(master); s.start(); }
+    else { burst(master,{f:900,q:0.6,a:0.18,dur:0.35,attack:0.12}); const t=ctx.currentTime,o=ctx.createOscillator(),g=gain(0); o.frequency.setValueAtTime(90,t+0.12); o.frequency.exponentialRampToValueAtTime(40,t+0.5); o.connect(g); g.connect(master); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.45,t+0.13); g.gain.exponentialRampToValueAtTime(0.001,t+0.6); o.start(t); o.stop(t+0.7); }
+    if(ambDuck) ambDuck.gain.setTargetAtTime(0.8,ctx.currentTime+0.4,0.6); },
+  phoneTap(){ burst(master,{f:1800,q:1.2,a:0.12,dur:0.04,pan:0.15}); burst(master,{f:300,type:'lowpass',a:0.18,dur:0.06,pan:0.15}); },
+  pings(){ [0,0.45,0.8,1.1].forEach((d,i)=>{ tone(1568,{a:0.03,dur:0.18,delay:d,pan:0.2}); tone(2093,{a:0.02,dur:0.22,delay:d+0.07,pan:0.2}); }); },
+  chime(){ tone(660,{a:0.05,dur:0.6}); tone(990,{a:0.035,dur:0.8,delay:0.12}); }
+};
+
+
+// ================= SPRINGS (Apple-style: damping ratio + response) =================
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+class Spring{
+  constructor(v=0,{damping=1,response=.4}={}){ this.v=v; this.vel=0; this.target=v; this.set(damping,response); this.onUpdate=null; this.active=false; this.done=null; }
+  set(damping,response){ this.k=Math.pow(2*Math.PI/response,2); this.c=4*Math.PI*damping/response; return this; }
+  to(t,{velocity,damping,response}={}){ if(damping!=null) this.set(damping,response??.4); this.target=t; if(velocity!=null) this.vel=velocity;
+    if(RM){ this.v=t; this.vel=0; this.onUpdate&&this.onUpdate(this.v); return Promise.resolve(); }
+    this.active=true; Springs.add(this); return new Promise(r=>this.done=r); }
+  jump(v){ this.v=this.target=v; this.vel=0; this.active=false; Springs.delete(this); this.onUpdate&&this.onUpdate(v); }
+  step(dt){ const n=Math.ceil(dt/0.004), h=dt/n; for(let i=0;i<n;i++){ const a=-this.k*(this.v-this.target)-this.c*this.vel; this.vel+=a*h; this.v+=this.vel*h; }
+    if(Math.abs(this.v-this.target)<0.05 && Math.abs(this.vel)<0.5){ this.v=this.target; this.vel=0; this.active=false; }
+    this.onUpdate&&this.onUpdate(this.v); if(!this.active){ Springs.delete(this); const d=this.done; this.done=null; d&&d(); } }
+}
+const Springs=new Set(); let lastT=performance.now();
+(function loop(t){ const dt=Math.min(0.05,(t-lastT)/1000); lastT=t; for(const s of [...Springs]) s.step(dt); requestAnimationFrame(loop); })(lastT);
+const project=(v,d=0.99)=>(v/1000)*d/(1-d);
+const rubber=(x,dim,c=0.55)=>Math.sign(x)*(Math.abs(x)*dim*c)/(dim+c*Math.abs(x));
+
+// ================= VIZUÁL =================
+const $=s=>document.querySelector(s);
+const orb=$('#orb'), whoEl=$('#who'), subs=$('#subs'), subsP=subs.querySelector('p');
+let subsOn=true, speaking=false;
+// orb "voice" motion: fast, small, irregular – never a slow loop
+const orbS=new Spring(1,{damping:.7,response:.18}); orbS.onUpdate=v=>orb.querySelector('.core').style.transform=`scale(${v})`;
+/* orb stays still while characters speak (only its colour follows the speaker) */
+function setSpeaker(role){ const r=ROLES[role]; document.documentElement.style.setProperty('--c',r.color); orb.style.setProperty('--c',r.color); whoEl.style.setProperty('--c',r.color);
+  whoEl.textContent=r.name; whoEl.classList.toggle('on',!!r.name); orb.classList.add('on'); window.Ball&&Ball.setRole(role); }
+const subY=new Spring(0,{damping:1,response:.35}); subY.onUpdate=v=>subs.style.transform=`translateX(-50%) translateY(${v}px)`;
+function showSub(role,text){ const r=ROLES[role]; if(!spkGate) setSpeaker(role); else { whoEl.style.setProperty('--c',r.color); whoEl.textContent=r.name; whoEl.classList.toggle('on',!!r.name); } subs.classList.toggle('thought',!!r.thought);
+  subsP.textContent=text; subs.classList.toggle('hide',!subsOn); subs.classList.add('on'); subY.jump(10); subY.to(0); }
+function clearSub(){ subs.classList.remove('on'); whoEl.classList.remove('on'); }
+
+// rain on the windshield
+const cv=$('#rain'), cx=cv.getContext('2d'); let drops=[], rainOn=false;
+function sizeCv(){ cv.width=innerWidth*devicePixelRatio; cv.height=innerHeight*devicePixelRatio; } sizeCv(); addEventListener('resize',sizeCv);
+for(let i=0;i<70;i++) drops.push({x:Math.random(),y:Math.random(),r:1+Math.random()*2.6,s:0,stick:Math.random()});
+(function rain(){ if(rainOn && !RM){ cx.clearRect(0,0,cv.width,cv.height); const d=devicePixelRatio;
+  for(const p of drops){ if(p.stick>0.985) p.s+=0.0009; else p.stick+=0.002*Math.random(); p.y+=p.s; if(p.y>1.05){ p.y=-0.05; p.x=Math.random(); p.s=0; p.stick=Math.random()*0.9; }
+    const x=p.x*cv.width, y=p.y*cv.height, r=p.r*d; const g=cx.createRadialGradient(x-r*.3,y-r*.3,0,x,y,r); g.addColorStop(0,'rgba(255,255,255,.55)'); g.addColorStop(1,'rgba(160,190,255,.06)');
+    cx.fillStyle=g; cx.beginPath(); cx.ellipse(x,y,r,r*(1+p.s*400),0,0,Math.PI*2); cx.fill(); } } requestAnimationFrame(rain); })();
+function visualScene(s){ if(s==='none') return; if(s==='officeLow') s='office'; ['car','hall','office','evening'].forEach(n=>$('#sc-'+n).classList.toggle('on',s===n)); rainOn=(s==='car'||s==='evening'); cv.classList.toggle('on',rainOn); }
+
+// chapter title: materialize (blur + scale), not just fade
+async function showChapter(k,t){ const el=$('#chapter'); el.querySelector('.k').textContent=k; el.querySelector('.k').style.display=k?'':'none'; el.querySelector('.t').textContent=t; $('#chName').textContent=t;
+  const s=new Spring(0,{damping:1,response:.9}); s.onUpdate=v=>{ el.style.opacity=v; el.style.filter=`blur(${(1-v)*14}px)`; el.style.transform=`scale(${0.94+v*0.06})`; };
+  await s.to(1); await sleep(1500); await s.to(0,{damping:1,response:.7}); }
+
+// ================= REČ =================
+let speakGen=0; const LINE_GAP=0.4; // natural breath between two lines
+const VOICE_IDS=Object.assign({"Tri hodiny. Tri hodiny sledujeme chlapa, ktorý má zjavne zaujímavejší spánkový režim ako ja celý svoj život.": "e01", "Hej, to by som si aj ja priala. Keby som v noci nescrollovala do tretej.": "e02", "Nič. Len som zisťovala, či má ten chalan z Tinderu naozaj sto osemdesiat, alebo sto osemdesiat „na Tinderi“.": "e03", "Na Tinderi. Rozhodne na Tinderi. Nikuška, nemáš niečo na jedenie? Lebo zjem volant.": "e04", "Počkaj, počkaj. Čo to je? Ty máš tlačidlák? Nikuška, to je nové opatrenie, aby si v noci nestalkovala bývalého na Instagrame?": "e05", "Ty? Ty si pamätáš evidenčné číslo každého auta, ktoré na nás za posledný rok trúbilo. Ale mobil stratíš.": "e06", "Au. Okej, to bolo pod pás. Tak čo sa stalo?": "e07", "Ou. Okej, prepáč. Ešte to bolí. No tak, Nikuška, čo sa stalo s mobilom?": "e08", "Volala si si naň?": "e09", "Takže ti ho niekto šlohol. Na policajnom školení. O kyberkriminalite. To je tak krásne, že by som to dala na Instagram.": "e10", "A kto tam vlastne všetko bol? Ja som sa vyhovorila na zubára.": "e11", "Mám veľmi citlivé zuby. A veľmi necitlivý budík.": "e12", "Šimon? Ten, čo na teba na vianočnom večierku pozeral ako na posledný chlebíček?": "e13", "Ajťáci. Takže tridsať chlapov a nula slušných viet.": "e14", "Ako vždy. Ty by si si nevšimla, ani keby ti niekto vyznal lásku cez megafón.": "e15", "No, ten mobil už neuvidíš. Prepáč, ale je to tak.": "e16", "Konečne. Hej, a večer ma hodíš domov? Lebo ak pôjdem pešo v tomto lejaku, zajtra tu namiesto mňa budeš mať utopenú mačku.": "e17", "Si zlatá. Preto si moja najlepšia kamoška. A nie, nie preto, že máš auto.": "e18", "Zradkyňa. Zapamätám si to. Na mojom pohrebe to bude prvá veta.": "e19", "To znamená nie. Poznám ťa, Nikuška.": "e20", "Ale vážne. Kúp si normálny mobil. Lebo keď budem raz v noci v problémoch, na ten tvoj sa ti nedovolám.": "e21", "Aspoň niekto v tomto aute spí.": "n01", "Čo si zase riešila?": "n02", "A? Tak koľko mal?": "n03", "Počkaj, pozriem do tašky.": "n04", "Smej sa, smej. Stratila som mobil.": "n05", "Hej. Aj mňa to prekvapilo.": "n06", "Aspoň mi naň o jednej v noci nepíše chalan z Tinderu „si hore?“.": "n07", "Na mojom bývalom si nechaj zuby, jasné?": "n08", "Včera. Na tom školení o kyberkriminalite.": "n09", "Mobil som mala vo vrecku saka. Ešte som naň pozerala. Pätnásť percent baterky a nula správ.": "n10", "To je v poriadku.": "n11", "A keď som po školení prišla k autu, mobil nikde. Sála, auto, záchody. Všetko som prehľadala.": "n12", "Asi dvadsaťkrát. Vypnutý.": "n13", "Na zubára. V piatok o ôsmej ráno.": "n14", "Polovica stanice. Kollár, Brezina, aj ten nový technik, Šimon.": "n15", "Hlavne ajťáci. A lektor, nejaký Hudák z Bratislavy.": "n16", "Neviem, Evka. Nevšímala som si to. Bola som mŕtva.": "n17", "Rozumiem, centrála. Vraciame sa.": "n18", "Jasné, hodím ťa.": "n19", "Dnes nestíham. Musím ešte dokončiť papiere na stanici.": "n20", "Uvidíme, kedy skončíme.": "n21", "A pamätajte si jedno. Váš mobil je ten najlepší špión, akého si môžete kúpiť. Vie, kde spíte, s kým píšete a čoho sa bojíte. A nosíte ho stále pri sebe.": "l01", "Desať minút prestávka. Káva je vzadu. A nie, nie je zadarmo.": "l02", "Pardon! Prepáčte, nevidel som vás.": "m01", "Ups... tak tú kávu som vylial. Ale nič sa nestalo, aspoň mám dôvod na druhú. Pekný deň.": "m02", "Hliadka dvanásť, centrála. Sledovanie končí. Vráťte sa na stanicu.": "d01"},{"Mám sa priznať? Vrátiť jej to?":'q1',"Šimon… Mám jej povedať pravdu? Alebo nie?":'q2',"A keď som po školení prišla k autu, mobil nikde. Prehľadala som sálu, auto, všetko.":'n22',"Volala si naň?":'e22',"Asi dvadsaťkrát. Stále vypnutý.":'n23',"Fúú, tak to by som nechcela. A kto tam vlastne všetko bol? Bol tam aj Šimon, čo po tebe ide?":'e23',"Bol tam. A furt na mňa zazeral s tým jeho slizkým pohľadom.":'n24',"Neviem, Evka. Nevšímala som si to. Bola som unavená.":'n25',"Nechaj ma. Nemám náladu.":'n26',"Ou. Citlivá téma. No tak, Nikuška, povedz mi to.":'e24',"Hodím ju domov? Alebo ju nechám ísť pešo?":'q3',"Čo jej mám povedať? Pomôžem jej, ako bude treba? Alebo jej poradím, aby sa prihlásila? Alebo si to radšej aj nahrám?":'k3_uvod_q',"Zoberiem ju? Alebo by som sa mala najskôr pozrieť, čo v nej je? Alebo ju tu proste nechám?":'k3_obalka_q',"Poviem jej pravdu alebo si niečo vymyslím?":'k3_odchod_q'});
+const LINE_TEXT=Object.fromEntries(Object.entries(VOICE_IDS).map(([k,v])=>[v,k]));
+const SPK={"intro": [[0.08, 4.59, "guide"], [5.6, 8.41, "guide"], [9.32, 11.59, "guide"], [12.41, 14.46, "guide"], [15.4, 16.62, "guide"], [17.47, 23.96, "guide"]], "k3_pravda": [[0.37, 3.74, "nikol"], [4.47, 8.3, "babka"], [8.98, 10.62, "nikol"], [12.95, 21.08, "babka"], [22.04, 27.17, "nikolT"]], "k3_sluzba": [[0.54, 3.0, "nikol"], [3.9, 6.85, "babka"], [7.39, 9.47, "nikol"], [10.14, 12.23, "babka"]], "k3_zaver": [[15.28, 15.89, "eva"], [16.48, 16.86, "nikol"], [18.14, 19.42, "eva"], [20.57, 22.19, "nikolT"], [22.91, 25.25, "nikolT"]], "navod": [[0.16, 7.74, "guide"], [8.88, 12.31, "guide"], [13.87, 33.1, "guide"], [33.92, 37.76, "guide"], [38.6, 46.08, "guide"]], "s1_blok1": [[6.38, 6.95, "disp"], [8.24, 9.5, "disp"], [13.08, 13.3, "eva"], [15.68, 15.82, "disp"], [17.71, 18.0, "disp"], [19.17, 20.17, "eva"], [23.17, 23.35, "eva"], [24.94, 26.91, "disp"], [28.05, 29.29, "disp"], [30.07, 30.23, "eva"], [32.91, 33.87, "eva"], [36.89, 37.17, "disp"], [38.75, 39.23, "disp"], [44.08, 44.84, "nikol"], [46.27, 46.53, "nikol"], [48.16, 48.29, "eva"], [50.45, 50.96, "nikol"], [53.06, 53.23, "disp"], [54.23, 55.82, "disp"], [61.84, 62.86, "disp"], [65.57, 65.84, "eva"], [67.24, 67.76, "eva"], [69.27, 69.38, "eva"], [74.59, 74.69, "eva"], [75.42, 75.82, "eva"], [77.02, 77.37, "eva"]], "s1_navrat": [[0.07, 1.93, "nikol"], [2.87, 5.54, "nikol"], [6.76, 7.44, "eva"], [8.11, 8.97, "nikol"], [9.73, 16.14, "eva"]], "s1_zaver": [[0.7, 4.39, "disp"], [8.3, 10.15, "nikol"]], "s2_partA": [[8.9, 9.18, "eva"], [10.12, 11.04, "eva"], [11.4, 13.42, "nikol"], [14.08, 14.62, "eva"], [15.77, 17.0, "lucy"], [17.27, 18.12, "nikol"], [18.61, 20.35, "lucy"], [20.7, 23.0, "nikol"], [23.24, 26.18, "lucy"], [26.63, 31.98, "eva"], [32.32, 34.21, "nikol"], [34.52, 38.62, "eva"]], "s2_partB": [[0.35, 6.59, "kollar"], [7.01, 10.35, "nikol"], [10.56, 13.49, "kollar"], [14.2, 14.4, "kollar"], [14.57, 17.28, "eva"], [17.93, 19.91, "kollar"]], "s2_vecer_scena": [[1.73, 6.09, "nikol"], [6.79, 13.07, "nikol"], [14.13, 16.27, "eva"], [17.09, 20.06, "eva"], [20.53, 22.39, "nikol"], [22.69, 24.2, "eva"]], "s2_vetva_priznat": [[0.59, 3.34, "nikol"], [3.92, 6.84, "eva"], [7.76, 9.55, "eva"]], "s2_vetva_vratit": [[0.63, 6.88, "nikol"], [7.51, 7.76, "eva"], [8.69, 9.54, "eva"]], "s3_2_1x": [[0.75, 2.18, "nikol"], [8.18, 8.34, "nikolT"], [8.79, 9.53, "nikol"], [9.91, 10.73, "eva"], [11.12, 15.46, "nikol"], [15.81, 17.88, "eva"], [33.54, 35.58, "babka"], [36.29, 37.65, "nikolT"]], "s3_2_2x": [[0.75, 2.12, "nikol"], [6.02, 6.17, "nikolT"], [9.17, 9.87, "nikolT"], [10.57, 11.83, "nikolT"], [13.37, 14.18, "nikolT"], [14.94, 15.28, "nikolT"], [16.43, 19.87, "nikolT"], [20.58, 24.2, "nikolT"], [24.41, 26.35, "eva"], [27.21, 31.06, "nikol"], [31.43, 33.49, "eva"], [49.16, 51.2, "babka"], [51.91, 53.24, "nikolT"]], "s3_2_3x": [[0.75, 2.11, "nikol"], [6.18, 6.34, "nikolT"], [9.8, 12.75, "nikolT"], [15.9, 18.46, "nikolT"], [18.86, 20.8, "eva"], [21.66, 25.52, "nikol"], [25.88, 27.95, "eva"], [43.61, 45.65, "babka"], [46.36, 47.72, "nikolT"]], "s3_a1x": [[1.19, 1.4, "nikol"], [2.23, 2.41, "nikol"], [3.48, 4.24, "nikol"], [6.67, 8.34, "eva"], [9.09, 13.4, "eva"], [13.96, 15.8, "nikol"], [16.18, 16.63, "eva"], [18.04, 20.16, "eva"], [21.02, 24.22, "eva"], [25.08, 25.56, "eva"], [26.48, 26.69, "nikol"], [28.61, 30.2, "eva"], [31.08, 33.59, "eva"], [34.63, 36.28, "nikol"], [38.28, 39.77, "eva"], [40.5, 41.53, "eva"]], "s3_a2x": [[0.11, 0.3, "nikol"], [2.2, 2.55, "nikol"], [3.51, 5.8, "nikol"], [6.79, 9.32, "nikol"], [10.26, 11.1, "eva"], [12.34, 13.54, "nikol"], [16.11, 16.68, "nikol"], [17.63, 17.93, "nikol"], [23.81, 24.06, "nikol"], [25.78, 26.67, "nikol"], [28.03, 28.13, "eva"], [30.18, 31.52, "eva"], [31.91, 32.26, "nikol"], [32.48, 32.62, "eva"], [33.59, 33.88, "nikol"], [34.37, 34.61, "eva"], [35.01, 35.9, "nikol"], [36.3, 36.61, "eva"], [37.72, 38.51, "nikol"], [40.53, 41.8, "eva"], [42.72, 43.74, "eva"], [44.32, 46.17, "nikol"], [46.54, 47.0, "eva"], [48.4, 50.55, "eva"], [51.38, 54.64, "eva"], [55.41, 55.92, "eva"], [56.84, 57.06, "nikol"], [58.97, 63.96, "eva"], [64.99, 66.81, "nikol"], [68.47, 71.93, "eva"]], "s3_a3x": [[3.36, 3.56, "nikol"], [5.64, 6.41, "nikol"], [8.79, 10.47, "eva"], [11.22, 15.52, "eva"], [16.06, 17.9, "nikol"], [18.28, 18.73, "eva"], [20.14, 22.27, "eva"], [23.12, 26.32, "eva"], [27.18, 27.66, "eva"], [28.58, 28.8, "nikol"], [30.71, 32.3, "eva"], [33.18, 35.7, "eva"], [36.73, 38.53, "nikol"], [40.38, 41.9, "eva"], [42.6, 43.63, "eva"]], "s3_intro": [[12.46, 13.02, "nikol"], [13.78, 14.56, "nikol"], [16.33, 16.51, "nikol"], [18.1, 23.24, "eva"], [24.11, 25.63, "eva"], [26.03, 27.5, "nikol"], [27.66, 27.76, "eva"], [29.34, 35.04, "eva"], [36.13, 46.92, "eva"], [47.26, 48.9, "nikol"], [49.33, 57.73, "eva"], [58.05, 59.7, "nikol"], [59.9, 63.36, "eva"], [63.69, 67.48, "nikol"], [67.68, 84.45, "eva"]]};
+const QA={c1:'s1_blok1',c2:'s1_navrat',k3a:'k3_uvod',k3b:'k3_obalka',k3c:'k3_odchod'};
+const DLG={"navod": [{"who": "guide", "text": "Teraz prichádza tvoje prvé rozhodnutie.", "at": 0}, {"who": "guide", "text": "Počas príbehu sa ocitneš vo chvíľach, keď nebude rozhodovať Nikol, ale ty.", "at": 3.28}, {"who": "guide", "text": "Polož prst na obrazovku a podrž ho. Zobrazia sa ti možnosti, z ktorých si môžeš vybrať.", "at": 8.76}, {"who": "guide", "text": "Ak chceš zvoliť prvú možnosť, potiahni prstom doprava.", "at": 13.59}, {"who": "guide", "text": "Pre druhú možnosť potiahni doľava.", "at": 17.41}, {"who": "guide", "text": "Niekedy budeš mať na výber až z troch možností.", "at": 20.23}, {"who": "guide", "text": "Tretiu zvolíš tak, že potiahneš prstom nadol.", "at": 23.39}, {"who": "guide", "text": "A ak si nebudeš istý, nad čím Nikol práve premýšľa, potiahni prstom nahor a otázka zaznie ešte raz.", "at": 26.77}, {"who": "guide", "text": "Neexistujú správne ani nesprávne odpovede.", "at": 33.92}, {"who": "guide", "text": "Len dôsledky.", "at": 37.2}, {"who": "guide", "text": "Každá voľba ovplyvní, ako sa príbeh bude vyvíjať.", "at": 38.59}, {"who": "guide", "text": "Niektoré zmeny spoznáš hneď.", "at": 42.07}, {"who": "guide", "text": "Iné… až keď už bude neskoro.", "at": 44.34}], "intro": [{"who": "guide", "text": "Prípad Eva.", "at": 0}, {"who": "guide", "text": "Interaktívny príbeh, ktorý sa odohráva len vo zvuku.", "at": 1.66}, {"who": "guide", "text": "Na obrazovke neuvidíš nič okrem jednoduchého ovládania.", "at": 5.37}, {"who": "guide", "text": "Všetko ostatné… sa odohrá v tvojej hlave.", "at": 9.3}, {"who": "guide", "text": "Nasaď si slúchadlá. Zavri oči. A vstúp do kože policajtky Nikol.", "at": 12.42}, {"who": "guide", "text": "Príbeh môžeš kedykoľvek zastaviť, vrátiť alebo posunúť dopredu pomocou ovládania v hornej časti obrazovky.", "at": 17.48}], "s1_zaver": [{"who": "disp", "text": "Hliadka dvanásť, centrála. Sledovanie končí. Vráťte sa na stanicu.", "at": 0.61}, {"who": "nikol", "text": "Rozumiem, centrála. Vraciame sa.", "at": 8.3}], "s1_navrat": [{"who": "nikol", "text": "A keď som po školení prišla k autu, mobil nikde. Prehľadala som sálu, auto, všetko.", "at": 0}, {"who": "eva", "text": "Volala si naň?", "at": 6.68}, {"who": "nikol", "text": "Asi dvadsaťkrát. Stále vypnutý.", "at": 7.85}, {"who": "eva", "text": "Fúú, tak to by som nechcela. A kto tam vlastne všetko bol? Bol tam aj Šimon, čo po tebe ide?", "at": 9.35}], "s1_blok1": [{"who": "disp", "text": "Hliadka dvanásť, centrála. Čo, dievčatá, ako to tam vyzerá?", "at": 6.3}, {"who": "eva", "text": "Tri hodiny. Tri hodiny tu sedíme a ten chlap ani raz nevyšiel z domu.", "at": 11.73}, {"who": "disp", "text": "Možno vie, že ho sledujete.", "at": 17.25}, {"who": "eva", "text": "Alebo spí. Ja by som tiež spala. Kedy nás prídu vystriedať?", "at": 19.17}, {"who": "disp", "text": "Ale Evka, kam by si chcela ísť? Veď ste tam len pár hodín.", "at": 23.04}, {"who": "eva", "text": "Dobre, Aďo, nikto sa nesmial. Už sa ozvi, len keď budeš mať dobré správy.", "at": 28.92}, {"who": "disp", "text": "Tak prepáč. Za pár minút vás prídu vystriedať. Zatiaľ sa majte.", "at": 35.51}, {"who": "nikol", "text": "Čo ty a Aďo? Celkom sa podpichujete, nie?", "at": 43.52}, {"who": "eva", "text": "Ale prosím ťa, daj pokoj.", "at": 47.11}, {"who": "nikol", "text": "Prečo? Podľa mňa lepší ako tie tvoje tinderové nálezy.", "at": 49.19}, {"who": "eva", "text": "Náhodou, včera som tam narazila na stoosemdesiat centimetrov vysokého úspešného chlapíka.", "at": 52.92}, {"who": "nikol", "text": "Aleee, nehovor!", "at": 59.04}, {"who": "eva", "text": "Len škoda, že tých stoosemdesiat centimetrov má len na Tinderi.", "at": 61.45}, {"who": "eva", "text": "No, aby si neodpadla od toľkého smiechu. Povedz mi radšej, koľko je hodín.", "at": 66.26}, {"who": "eva", "text": "Počkaj. Čo to je? Ty máš tlačidlový mobil? To kde si ho vyhrabala?", "at": 71.39}], "s2_otazka": [{"who": "nikolT", "text": "Priznám to? Vrátim jej to? Alebo ju budem ignorovať?", "at": 0.0}], "s2_vetva_priznat": [{"who": "nikol", "text": "Dobre, fajn. Asi som ho zabudla. Spokojná?", "at": 0}, {"who": "eva", "text": "Veľmi. Zapíšem si to do kalendára. Deň, keď Nikol priznala chybu.", "at": 3.7}], "s2_vetva_vratit": [{"who": "nikol", "text": "Ja aspoň svoje veci nachádzam. Ty si stále hľadáš chlapa a akosi ho stále niet.", "at": 0}, {"who": "eva", "text": "Au. To bolo zbytočne kruté.", "at": 7.42}], "s2_vetva_ignorovat": [{"who": "eva", "text": "Ignorovanie. Dospelé. Veľmi profesionálne.", "at": 0.0}], "s2_vecer": [{"who": "eva", "text": "Tak. Ja končím. Môj mozog aj tak skončil už o druhej.", "at": 0.0}], "s2_vecer_odvoz": [{"who": "nikol", "text": "Daj mi dve minúty a hodím ťa.", "at": 0}, {"who": "eva", "text": "Jéj, ty si zlatá. Vieš, že ťa ľúbim, však?", "at": 2.2}, {"who": "nikol", "text": "Vravíš to len preto, že mám auto.", "at": 5.85}, {"who": "eva", "text": "Aj preto.", "at": 8.25}], "s2_vecer_pesho": [{"who": "eva", "text": "Tak idem pešo. Nie že budeš plakať, ak ma zajtra nájdu utopenú v kaluži.", "at": 0}, {"who": "nikol", "text": "Napíš mi, keď budeš doma.", "at": 5.17}, {"who": "eva", "text": "Jasné, ahoj.", "at": 7.18}], "s2_vecer_otazka": [{"who": "eva", "text": "Tak. Ja končím. Môj mozog aj tak skončil už o druhej.", "at": 0}, {"who": "eva", "text": "Nikol? Hodila by si ma domov?", "at": 5.15}], "s2_vecer_pesho_eva": [{"who": "eva", "text": "Pôjdem ja teda pešo, keď si sa takto na mňa vykašlala.", "at": 0}, {"who": "eva", "text": "Nie že budeš plakať, ak ma zajtra nájdu utopenú v kaluži.", "at": 3.85}], "s2_vecer_pesho_koniec": [{"who": "nikol", "text": "Napíš mi, keď budeš doma.", "at": 0.1}, {"who": "eva", "text": "Jasné, ahoj.", "at": 2.15}], "s2_partA": [{"who": "eva", "text": "Fuj. Som celá mokrá.", "at": 8.62}, {"who": "nikol", "text": "To bude tým, že nikoho nemáš.", "at": 11.42}, {"who": "eva", "text": "Wooow.", "at": 13.9}, {"who": "lucy", "text": "Ahoj, Nikol!", "at": 15.79}, {"who": "nikol", "text": "Ahoj, Lucy.", "at": 17.25}, {"who": "lucy", "text": "Nie je toto náhodou tvoj mobil?", "at": 18.41}, {"who": "nikol", "text": "Čože? Lucy, kde si ho našla?", "at": 20.58}, {"who": "lucy", "text": "Upratovačka mi ho dnes doniesla, že či neviem, čí je.", "at": 23.26}, {"who": "eva", "text": "Takže ti ho nikto neukradol. Len si ho zabudla na školení. Ako vždy.", "at": 26.44}, {"who": "nikol", "text": "Prisahala by som, že som tam hľadala.", "at": 32.29}, {"who": "eva", "text": "Ty prisaháš aj na to, že si nikdy nepísala bývalému o druhej v noci.", "at": 34.52}], "s2_partB": [{"who": "kollar", "text": "Nikol, keď už si tu: protokol z rána, tá krádež v obchode a šéf chce do obeda tabuľku nadčasov.", "at": 0.32}, {"who": "nikol", "text": "Ešte niečo? Kávu a masáž chodidiel by si nechcel?", "at": 7.29}, {"who": "kollar", "text": "Kávu si dám. A Eva, ty máš o desiatej výsluch.", "at": 10.98}, {"who": "eva", "text": "Veď je piatok. V piatok sa s ľuďmi nerozprávam.", "at": 14.61}, {"who": "kollar", "text": "Tak si to vyrieš s ním. Sedí tam od ôsmej.", "at": 18.23}], "k3_a1": [{"who": "nikol", "text": "Dobre. Dobre, Eva. Pomôžem ti. Povedz mi, čo mám robiť.", "at": 0.3}, {"who": "eva", "text": "Ďakujem… ďakujem, Nikuška. Ja som vedela, že ty…", "at": 4.63}, {"who": "eva", "text": "Musíš ísť ku mne do bytu. Kým tam niekto príde.", "at": 9.96}], "k3_a2": [{"who": "nikol", "text": "Eva, počúvaj ma. Musíš sa prihlásiť. Zavolaj stopäťdesiatosmičku a ja tam budem s tebou. Poviem, že si sa bránila. Budem pri tebe celý čas.", "at": 0.3}, {"who": "eva", "text": "Takže aj ty…", "at": 11.45}, {"who": "nikol", "text": "Eva? Eva!", "at": 15.51}, {"who": "nikolT", "text": "„Prepáč. Postaraj sa o Tobiho.“", "at": 26.16}, {"who": "nikol", "text": "Nie… Eva, nerob to. Zodvihni to…", "at": 29.12}, {"who": "nikol", "text": "Dobre! Dobre. Prídem. Urobím, čo chceš. Len nerob nič hlúpe. Prosím ťa.", "at": 37.76}, {"who": "eva", "text": "Príď ku mne do bytu. Kým tam niekto príde.", "at": 43.63}], "k3_a3": [{"who": "nikol", "text": "Dobre, Eva. Pomôžem ti.", "at": 0.3}, {"who": "nikolT", "text": "Prepáč, Eva. Ale nemôžem riskovať, že sa z toho stane môj problém.", "at": 2.9}, {"who": "nikolT", "text": "Nahrávanie beží. Nikdy si to neodpustím. Ale ani nebudem musieť, ak to nikdy nepoužijem.", "at": 11.25}, {"who": "eva", "text": "Ďakujem, Nikuška… Príď ku mne do bytu. Kým tam niekto príde.", "at": 18.44}], "k3_b1": [{"who": "nikol", "text": "Sľubujem. Zoberiem ju.", "at": 0.3}, {"who": "nikolT", "text": "Neotváraj, povedala. Tak neotváram.", "at": 6.85}], "k3_b2": [{"who": "nikol", "text": "Dobre.", "at": 0.3}, {"who": "nikolT", "text": "Prepáč, Eva. Musím vedieť, do čoho idem.", "at": 5.5}, {"who": "nikolT", "text": "USB kľúč. A lístok. Jej písmo. „Ak sa mi niečo stane, daj to niekomu mimo nášho oddelenia.“", "at": 9.27}, {"who": "nikolT", "text": "Mimo nášho oddelenia? Eva, do čoho si sa to zase…", "at": 18.31}, {"who": "nikolT", "text": "Neskôr. Teraz je tu Marek.", "at": 22.9}], "k3_b3": [{"who": "nikol", "text": "Hej. Mám ju.", "at": 0.3}, {"who": "nikolT", "text": "Babkin košík s vlnou. Tam nikto hľadať nebude.", "at": 4.17}, {"who": "nikolT", "text": "Klamem jej. Prvýkrát za pätnásť rokov.", "at": 9.52}], "k3_obalka": [{"who": "nikol", "text": "Kľúče?", "at": 0.5}, {"who": "eva", "text": "V kvetináči pri dverách. Ako vždy.", "at": 1.77}, {"who": "eva", "text": "A Nika… tú obálku, čo som ti dala. Máš ju u babky?", "at": 4.99}, {"who": "nikol", "text": "Hej. V taške.", "at": 10.29}, {"who": "eva", "text": "Zober ju so sebou. Prosím ťa. Nesmie ostať u babky. Nesmie ostať nikde.", "at": 12.28}, {"who": "nikol", "text": "Čo v nej je?", "at": 17.7}, {"who": "eva", "text": "Neskôr. Teraz nie. Sľúb mi, že ju zoberieš.", "at": 19.63}], "k3_odchod": [{"who": "eva", "text": "Nika? Ešte si tam?", "at": 0.3}, {"who": "nikol", "text": "Som. Obliekam sa. Ostaň na telefóne. Nepoložíš mi to, jasné?", "at": 3.04}, {"who": "eva", "text": "Nepoložím. Budem tu.", "at": 7.69}, {"who": "babka", "text": "Nikolka? Čo sa deje? Kam ideš v takom čase?", "at": 20.6}, {"who": "nikolT", "text": "Babka. Samozrejme.", "at": 25.81}], "k3_pravda": [{"who": "nikol", "text": "Eva má problém, babi. Veľký. Musím za ňou.", "at": 0.3}, {"who": "babka", "text": "Evička? Preboha… A zavolala si niekomu?", "at": 4.36}, {"who": "nikol", "text": "Ja som ten niekto, babi.", "at": 8.93}, {"who": "babka", "text": "Tak choď. A zober si šál. A Nikolka… nech je to čokoľvek, rob len to, čo budeš vedieť ráno vysvetliť.", "at": 12.88}, {"who": "nikolT", "text": "Rob len to, čo budeš vedieť ráno vysvetliť. Keby som tak vedela, aké bude ráno.", "at": 21.98}], "k3_sluzba": [{"who": "nikol", "text": "Služba, babi. Volali ma. Choď spať.", "at": 0.3}, {"who": "babka", "text": "V noci? Veď si mala voľno…", "at": 3.82}, {"who": "nikol", "text": "Viem. Ráno ti to vysvetlím.", "at": 7.35}, {"who": "babka", "text": "Daj na seba pozor, dievča.", "at": 10.11}], "k3_uvod": [{"who": "nikolT", "text": "BOOŽE to kto mi teraz volá… Koľko je… Jedna štyridsaťsedem?", "at": 2.7}, {"who": "nikolT", "text": "Eva?", "at": 8.77}, {"who": "nikol", "text": "Eva? Čo je… Nevydaril sa ti ten stoosemdesiatcentimetrový?", "at": 12.16}, {"who": "eva", "text": "Nikuška… prepáč, že ťa budím. Ja… Ja... . Spravila som niečo hrozné.", "at": 18.65}, {"who": "nikol", "text": "Čo sa stalo? Si v poriadku?", "at": 26.84}, {"who": "eva", "text": "Nie. Nie som. Marek… on bol po tom víne úplne iný. Chytil ma pod krkom, Nika. Pri stole. Ja som ho odstrčila… a... a on spadol… a udrel sa o roh stola.", "at": 29.76}, {"who": "nikol", "text": "Eva…", "at": 42.87}, {"who": "eva", "text": "Nedýcha, Nika. Ja som tam stála a čakala, že sa pohne. A on sa nepohol.", "at": 44.38}, {"who": "nikolT", "text": "Nie. Nie, nie, nie. Toto sa nedeje.", "at": 51.75}, {"who": "nikol", "text": "Kde si teraz?", "at": 55.49}, {"who": "eva", "text": "Utiekla som. Sedím v aute. Neviem ani, kde som… niekde za mestom. Aj mňa udrel, trochu krvácam, ale to nič.", "at": 57.19}, {"who": "nikol", "text": "Krvácaš? Odkiaľ?", "at": 66.78}, {"who": "eva", "text": "Z ruky. To nič, Niku, to nič… Počúvaj ma.", "at": 69.27}, {"who": "nikol", "text": "Eva, musím zavolať záchranku. Aj pre neho. Možno ešte žije.", "at": 73.98}, {"who": "eva", "text": "Nežije, Nika. Ja viem, ako vyzerá mŕtvy človek. Aj ty to vieš.", "at": 80.42}, {"who": "eva", "text": "A keď tam príde polícia, je koniec. Ja už mám tú vec spred troch rokov. S Robom. Podmienku. Nikto mi neuverí, že som sa bránila.", "at": 85.94}, {"who": "eva", "text": "Zoberú mi Tobiho, Nika. Zoberú mi ho.", "at": 96.63}, {"who": "nikolT", "text": "Tobiáš. Šesť rokov. Včera mi ukazovala jeho kresbu. Dinosaurus v policajnej čiapke.", "at": 101.22}, {"who": "nikolT", "text": "A ja som policajtka. Ja by som teraz mala…", "at": 109.1}], "k3_zaver": [{"who": "eva", "text": "Nikuška?", "at": 15.2}, {"who": "nikol", "text": "Hm?", "at": 16.52}, {"who": "eva", "text": "Ďakujem. Že si.", "at": 17.67}, {"who": "nikolT", "text": "Eva je moja najlepšia kamarátka. Keby som jej teraz nepomohla ja, kto potom?", "at": 20.49}], "s3_intro": [{"who": "nikol", "text": "BOOŽE, to kto mi teraz volá… Eva?", "at": 12.46, "end": 16.51}, {"who": "eva", "text": "Nikuška… prepáč, že ťa budím. Ja… Ja… Spravila som niečo hrozné.", "at": 18.1, "end": 25.63}, {"who": "nikol", "text": "Čo sa stalo? Si v poriadku?", "at": 26.03, "end": 27.5}, {"who": "eva", "text": "Marek… on bol po tom víne úplne iný. Chytil ma pod krkom, Nika. Pri stole. Ja som ho odstrčila… a… a on spadol… a udrel sa o roh stola.", "at": 27.66, "end": 40.63}, {"who": "eva", "text": "Nedýcha, Nika. Ja som tam stála a čakala, že sa pohne. A on sa nepohol.", "at": 40.81, "end": 46.92}, {"who": "nikol", "text": "Preboha, kde si teraz?", "at": 47.26, "end": 48.9}, {"who": "eva", "text": "Utiekla som. Sedím v aute. Neviem ani, kde som… niekde za mestom. Aj mňa udrel, trochu krvácam, ale to nič.", "at": 49.33, "end": 57.73}, {"who": "nikol", "text": "Krvácaš? Odkiaľ?", "at": 58.05, "end": 59.7}, {"who": "eva", "text": "Z ruky. To nič, Niku, to nič… Počúvaj ma.", "at": 59.9, "end": 63.36}, {"who": "nikol", "text": "Eva, musím zavolať záchranku. Aj pre neho. Možno ešte žije.", "at": 63.69, "end": 67.48}, {"who": "eva", "text": "Nežije, Nika. Ja viem, ako vyzerá mŕtvy človek. Aj ty to vieš.", "at": 67.68, "end": 71.83}, {"who": "eva", "text": "A keď tam príde polícia, je koniec. Ja už mám tú vec spred troch rokov. S Robom. Podmienku. Nikto mi neuverí, že som sa bránila.", "at": 72.46, "end": 81.44}, {"who": "eva", "text": "Zoberú mi Tobiho, Nika. Zoberú mi ho.", "at": 81.95, "end": 84.45}], "s3_a1": [{"who": "nikol", "text": "Dobre. Dobre, Eva. Pomôžem ti. Povedz mi, čo mám robiť.", "at": 0.14}, {"who": "eva", "text": "Ďakujem… ďakujem, Nikuška. Ja som vedela, že ty…", "at": 5.11}, {"who": "eva", "text": "Musíš ísť ku mne do bytu. Kým tam niekto príde.", "at": 10.79}], "s3_a2": [{"who": "nikol", "text": "Eva, počúvaj ma. Musíš sa prihlásiť. Zavolaj stopäťdesiatosmičku a ja tam budem s tebou. Poviem, že si sa bránila. Budem pri tebe celý čas.", "at": 0.11}, {"who": "eva", "text": "Takže aj ty…", "at": 12.33}, {"who": "nikol", "text": "Eva? Eva!", "at": 23.1}, {"who": "nikolT", "text": "„Prepáč. Postaraj sa o Tobiho.“", "at": 24.61}, {"who": "nikol", "text": "Nie… Eva, nerob to. Zodvihni to…", "at": 30.08}, {"who": "nikol", "text": "Dobre! Dobre. Prídem. Urobím, čo chceš. Len nerob nič hlúpe. Prosím ťa.", "at": 33.5}, {"who": "eva", "text": "Príď ku mne do bytu. Kým tam niekto príde.", "at": 39.87}], "s3_a3": [{"who": "nikol", "text": "Dobre, Eva. Pomôžem ti.", "at": 2.33}, {"who": "nikolT", "text": "Prepáč, Eva. Ale nemôžem riskovať, že sa z toho stane môj problém.", "at": 4.39}, {"who": "nikolT", "text": "Nahrávanie beží. Nikdy si to neodpustím. Ale ani nebudem musieť, ak to nikdy nepoužijem.", "at": 7.77}, {"who": "eva", "text": "Ďakujem, Nikuška… Príď ku mne do bytu. Kým tam niekto príde.", "at": 12.89}], "s2_vecer_scena": [{"who": "nikol", "text": "Dobre, Evi, ja už mám na dnes padla. Idem k babke. Ani si nevieš predstaviť, ako sa teším, keď sa vyvalím do tej fajnej komunistickej postieľky.", "at": 1.74}, {"who": "eva", "text": "Fúú, tak to ti závidím. Ja ešte dorobím túto blbosť a pôjdem tiež.", "at": 13.2}, {"who": "nikol", "text": "Dobre, Evi. Ahoooj.", "at": 21.1}, {"who": "eva", "text": "Ahoooj, Nikuš.", "at": 22.6}], "s3_2": [{"who": "nikol", "text": "Kľúče?", "at": 0.06}, {"who": "eva", "text": "V kvetináči pri dverách. Ako vždy.", "at": 2.13}, {"who": "eva", "text": "A Nika… tú obálku, čo som ti dala. Máš ju u babky?", "at": 5.65}, {"who": "nikol", "text": "Hej. V taške.", "at": 12.27}, {"who": "eva", "text": "Zober ju so sebou. Prosím ťa. Nesmie ostať u babky. Nesmie ostať nikde.", "at": 13.85}, {"who": "nikol", "text": "Čo v nej je?", "at": 20.33}, {"who": "eva", "text": "Neskôr. Teraz nie. Sľúb mi, že ju zoberieš.", "at": 23.22}], "s3_2_1": [{"who": "nikol", "text": "Sľubujem. Zoberiem ju.", "at": 0.6}, {"who": "nikolT", "text": "Neotváraj, povedala. Tak neotváram.", "at": 5.63}], "s3_2_2": [{"who": "nikol", "text": "Dobre.", "at": 0.6}, {"who": "nikolT", "text": "Prepáč, Eva. Musím vedieť, do čoho idem.", "at": 5.96}, {"who": "nikolT", "text": "USB kľúč. A lístok. Jej písmo. „Ak sa mi niečo stane, daj to niekomu mimo nášho oddelenia.“", "at": 9.11}, {"who": "nikolT", "text": "Mimo nášho oddelenia? Eva, do čoho si sa to zase…", "at": 16.41}, {"who": "nikolT", "text": "Neskôr. Teraz je tu Marek.", "at": 20.57}], "s3_2_3": [{"who": "nikol", "text": "Hej. Mám ju.", "at": 0.6}, {"who": "nikolT", "text": "Babkin košík s vlnou. Tam nikto hľadať nebude.", "at": 6.13}, {"who": "nikolT", "text": "Klamem jej. Prvýkrát za pätnásť rokov.", "at": 15.79}], "s3_3": [{"who": "eva", "text": "Nika? Ešte si tam?", "at": 0.41}, {"who": "nikol", "text": "Som. Obliekam sa. Ostaň na telefóne. Nepoložíš mi to, jasné?", "at": 3.73}, {"who": "eva", "text": "Nepoložím. Budem tu.", "at": 13.94}, {"who": "babka", "text": "Nikolka? Čo sa deje? Kam ideš v takom čase?", "at": 19.43}, {"who": "nikolT", "text": "Babka. Samozrejme.", "at": 24.31}], "s3_a1x": [{"who": "nikol", "text": "Dobre. Dobre, Eva. Pomôžem ti. Povedz mi, čo mám robiť.", "at": 1.19, "end": 4.24}, {"who": "eva", "text": "Ďakujem… ďakujem, Nikuška. Ja som vedela, že ty…", "at": 6.67, "end": 10.17}, {"who": "eva", "text": "Musíš ísť ku mne do bytu. Kým tam niekto príde.", "at": 10.79, "end": 13.4}, {"who": "nikol", "text": "A kľúče máš niekde schované?", "at": 13.96, "end": 15.8}, {"who": "eva", "text": "V kvetináči pri dverách. Ako vždy.", "at": 16.18, "end": 19.11}, {"who": "eva", "text": "A Nika… tú obálku, čo som ti dala. Máš ju u babky?", "at": 19.64, "end": 24.22}, {"who": "nikol", "text": "Hej. V taške.", "at": 25.08, "end": 26.69}, {"who": "eva", "text": "Zober ju so sebou. Prosím ťa. Nesmie ostať u babky. Nesmie ostať nikde.", "at": 28.61, "end": 33.59}, {"who": "nikol", "text": "Čo v nej je, keď ju potrebuješ?", "at": 34.63, "end": 36.28}, {"who": "eva", "text": "Neskôr. Teraz nie. Sľúb mi, že ju zoberieš.", "at": 38.28, "end": 41.53}], "s3_a2x": [{"who": "nikol", "text": "Eva, počúvaj ma. Musíš sa prihlásiť. Zavolaj 158 a ja tam budem s tebou. Poviem, že si sa bránila. Budem pri tebe celý čas.", "at": 0.11, "end": 9.32}, {"who": "eva", "text": "Takže aj ty…", "at": 10.26, "end": 11.1}, {"who": "nikol", "text": "Eva? Eva!", "at": 12.34, "end": 13.54}, {"who": "nikol", "text": "Nie… Eva, nerob to. Zodvihni to…", "at": 16.11, "end": 17.93}, {"who": "nikol", "text": "Poslala mi správu… „Prepáč. Postaraj sa o Tobiho.“", "at": 23.81, "end": 26.67}, {"who": "nikol", "text": "Nie… Eva, nerob to. Zodvihni to…", "at": 30.18, "end": 33.88}, {"who": "nikol", "text": "Dobre! Dobre. Prídem. Urobím, čo chceš. Len nerob nič hlúpe. Prosím ťa.", "at": 35.01, "end": 38.51}, {"who": "eva", "text": "Choď, prosím, ku mne do bytu. Kým tam niekto príde.", "at": 40.53, "end": 43.74}, {"who": "nikol", "text": "A kľúče máš niekde schované?", "at": 44.32, "end": 46.17}, {"who": "eva", "text": "V kvetináči pri dverách. Ako vždy.", "at": 46.54, "end": 49.65}, {"who": "eva", "text": "A Nika… tú obálku, čo som ti dala. Máš ju u babky?", "at": 49.9, "end": 54.64}, {"who": "nikol", "text": "Hej. V taške.", "at": 55.41, "end": 57.06}, {"who": "eva", "text": "Zober ju so sebou. Prosím ťa. Nesmie ostať u babky. Nesmie ostať nikde.", "at": 58.97, "end": 63.96}, {"who": "nikol", "text": "Čo v nej je, keď ju potrebuješ?", "at": 64.99, "end": 66.81}, {"who": "eva", "text": "Neskôr. Teraz nie. Sľúb mi, že ju zoberieš.", "at": 68.47, "end": 71.93}], "s3_a3x": [{"who": "nikol", "text": "Dobre. Dobre, Eva. Pomôžem ti. Povedz mi, čo mám robiť.", "at": 3.36, "end": 6.41}, {"who": "eva", "text": "Ďakujem… ďakujem, Nikuška. Ja som vedela, že ty…", "at": 8.79, "end": 12.26}, {"who": "eva", "text": "Musíš ísť ku mne do bytu. Kým tam niekto príde.", "at": 12.91, "end": 15.52}, {"who": "nikol", "text": "A kľúče máš niekde schované?", "at": 16.06, "end": 17.9}, {"who": "eva", "text": "V kvetináči pri dverách. Ako vždy.", "at": 18.28, "end": 21.21}, {"who": "eva", "text": "A Nika… tú obálku, čo som ti dala. Máš ju u babky?", "at": 21.74, "end": 26.32}, {"who": "nikol", "text": "Hej. V taške.", "at": 27.18, "end": 28.8}, {"who": "eva", "text": "Zober ju so sebou. Prosím ťa. Nesmie ostať u babky. Nesmie ostať nikde.", "at": 30.71, "end": 35.7}, {"who": "nikol", "text": "Čo v nej je, keď ju potrebuješ?", "at": 36.73, "end": 38.53}, {"who": "eva", "text": "Neskôr. Teraz nie. Sľúb mi, že ju zoberieš.", "at": 40.38, "end": 43.63}], "s3_2_1x": [{"who": "nikol", "text": "Sľubujem. Zoberiem ju.", "at": 0.75, "end": 2.18}, {"who": "eva", "text": "Nika? Ešte si tam?", "at": 8.79, "end": 10.73}, {"who": "nikol", "text": "Som. Obliekam sa. Ostaň na telefóne. Nepoložíš mi to, jasné?", "at": 11.12, "end": 15.46}, {"who": "eva", "text": "Nepoložím. Budem tu.", "at": 15.81, "end": 17.88}, {"who": "babka", "text": "Nikolka? Čo sa deje? Kam ideš v takom čase?", "at": 33.54, "end": 37.65}], "s3_2_2x": [{"who": "nikol", "text": "Sľubujem. Zoberiem ju.", "at": 0.75, "end": 2.12}, {"who": "nikolT", "text": "Prepáč, Eva. Musím vedieť, do čoho idem.", "at": 9.17, "end": 11.83}, {"who": "nikolT", "text": "USB kľúč. A lístok.", "at": 13.37, "end": 15.28}, {"who": "nikolT", "text": "„Ak sa mi niečo stane, daj to niekomu mimo nášho oddelenia.“", "at": 16.43, "end": 20.75}, {"who": "nikolT", "text": "Mimo nášho oddelenia? Eva, do čoho si sa to zase…", "at": 21.04, "end": 24.2}, {"who": "eva", "text": "Nika? Ešte si tam?", "at": 24.41, "end": 26.35}, {"who": "nikol", "text": "Som. Obliekam sa. Ostaň na telefóne. Nepoložíš mi to, jasné?", "at": 27.21, "end": 31.06}, {"who": "eva", "text": "Nepoložím. Budem tu.", "at": 31.43, "end": 33.49}, {"who": "babka", "text": "Nikolka? Čo sa deje? Kam ideš v takom čase?", "at": 49.16, "end": 53.24}], "s3_2_3x": [{"who": "nikol", "text": "Sľubujem. Zoberiem ju.", "at": 0.75, "end": 2.11}, {"who": "nikolT", "text": "Babkin košík s vlnou. Tam nikto hľadať nebude.", "at": 9.8, "end": 12.75}, {"who": "nikolT", "text": "Klamem jej. Prvýkrát za pätnásť rokov.", "at": 15.9, "end": 18.46}, {"who": "eva", "text": "Nika? Ešte si tam?", "at": 18.86, "end": 20.8}, {"who": "nikol", "text": "Som. Obliekam sa. Ostaň na telefóne. Nepoložíš mi to, jasné?", "at": 21.66, "end": 25.52}, {"who": "eva", "text": "Nepoložím. Budem tu.", "at": 25.88, "end": 27.95}, {"who": "babka", "text": "Nikolka? Čo sa deje? Kam ideš v takom čase?", "at": 43.61, "end": 47.72}]};
+const BUF={}, SFXBUF={}, SFXHIT={}, ACTIVE=new Set(); let lastSayRole=null; let curVoice=null, analyser=null, abuf=null, voiceBus={};
+function cancelAll(){ try{ speechSynthesis.cancel(); }catch(e){} stopVoice(); }
+let dlgTimers=[];
+function stopVoice(){ dlgTimers.forEach(clearTimeout); dlgTimers=[]; for(const s of ACTIVE){ try{ s.onended=null; s.stop(); }catch(e){} } ACTIVE.clear(); if(curVoice){ const v=curVoice; curVoice=null; v.fin(); } }
+function buildVoiceChain(){
+  analyser=ctx.createAnalyser(); analyser.fftSize=1024; abuf=new Float32Array(analyser.fftSize); analyser.connect(master);
+  const vEq=filt('highshelf',6500,0.7,-2), vLo=filt('lowshelf',200,0.7,1); vEq.connect(vLo); vLo.connect(analyser);
+  const dry=gain(1); dry.connect(vEq); const drs=gain(0.16); dry.connect(drs); drs.connect(buses.studio); voiceBus.dry=dry;
+  // thought: softer, darker, more space
+  const th=gain(0.92), thf=filt('lowpass',4500); th.connect(thf); thf.connect(analyser); const thr=gain(0.28); th.connect(thr); thr.connect(reverb); voiceBus.thought=th;
+  // lecture hall: PA-ish with big room
+  const hl=gain(0.85), hlf=filt('highpass',140); hl.connect(hlf); hlf.connect(analyser); const hlr=gain(0.55); hl.connect(hlr); hlr.connect(reverb); voiceBus.hall=hl;
+  // radio: band-limited + light drive
+  const rd=gain(0.45), rf1=filt('highpass',380), rf2=filt('lowpass',3100), sh=ctx.createWaveShaper(); const cur=new Float32Array(1024); for(let i=0;i<1024;i++){ const x=i/512-1; cur[i]=Math.tanh(x*2.2); } sh.curve=cur;
+  const rg=gain(1.25); rd.connect(rf1); rf1.connect(rf2); rf2.connect(sh); sh.connect(rg); rg.connect(analyser); voiceBus.radio=rd;
+  const nr=gain(1); nr.connect(vEq); const nrr=gain(0.12); nr.connect(nrr); nrr.connect(reverb); const nrs=gain(0.14); nr.connect(nrs); nrs.connect(buses.studio); voiceBus.near=nr;
+  const rm=gain(1); rm.connect(vEq); const rmr=gain(0.14); rm.connect(rmr); rmr.connect(reverb); const rms=gain(0.2); rm.connect(rms); rms.connect(buses.studio); voiceBus.room=rm;
+}
+const ROLE_BUS={eva:'dry',nikol:'dry',nikolT:'thought',lektor:'room',muz:'near',disp:'radio'};
+const SFX_FILES=['k3room','rain','laugh','chatter','engine','wipers','cue','pick','tension','arrive','office','evening','timepass','phone','leave_walk','leave_drive','idle'];
+async function preload(onProgress){ const ids=[...new Set([...Object.values(VOICE_IDS).filter(i=>!/^m0|^n11/.test(i)),...Object.keys(DLG)])]; const total=ids.length+SFX_FILES.length; let done=0;
+  await Promise.all([...ids.map(async id=>{ try{ const r=await fetch('a/'+id+'.mp3'); if(r.ok){ BUF[id]=await ctx.decodeAudioData(await r.arrayBuffer()); } }catch(e){} done++; onProgress&&onProgress(done/total); }),
+    ...SFX_FILES.map(async n=>{ try{ const r=await fetch('s/'+n+'.mp3'); if(r.ok){ const b=await ctx.decodeAudioData(await r.arrayBuffer()); SFXBUF[n]=b;
+      const d=b.getChannelData(0); let mi=0,mv=0; for(let i=0;i<d.length;i+=16){ const v=Math.abs(d[i]); if(v>mv){ mv=v; mi=i; } } SFXHIT[n]=mi/b.sampleRate; } }catch(e){} done++; onProgress&&onProgress(done/total); })]); }
+function speak(text,role,id,early){ const g0=speakGen; const r=ROLES[role];
+  if(id && BUF[id]){ if(role!=='sys') showSub(role,text);
+    return new Promise(res=>{ const src=ctx.createBufferSource(); src.buffer=BUF[id]; src.connect(voiceBus[ROLE_BUS[role]||'dry']);
+      let done=false, tm=null; const fin=()=>{ if(done) return; done=true; spkGate=false; clearTimeout(tm); if(curVoice&&curVoice.src===src) curVoice=null; res(g0===speakGen?'done':'int'); };
+      curVoice={src,fin}; ACTIVE.add(src); src.onended=()=>{ ACTIVE.delete(src); fin(); }; src.start();
+      // hand over to the next line a beat before this one fully dies away, like people who actually talk to each other
+      tm=setTimeout(fin, Math.max(0,BUF[id].duration+(early!=null?-early:LINE_GAP))*1000); }); }
+  return new Promise(res=>{ if(role!=='sys') showSub(role,text);
+  const u=new SpeechSynthesisUtterance(text); u.lang=langUsed; const v=voiceFor(role); if(v) u.voice=v; u.pitch=r.pitch; u.rate=r.rate; u.volume=r.vol;
+  let done=false; const fin=()=>{ if(done) return; done=true; speaking=false; clearTimeout(to); clearInterval(keep); res(g0===speakGen?'done':'int'); };
+  u.onstart=()=>{ if(role!=='sys') speaking=true; }; u.onend=fin; u.onerror=fin;
+  const to=setTimeout(fin,3000+text.length*120); const keep=setInterval(()=>{ if(speechSynthesis.paused) speechSynthesis.resume(); },4000);
+  speechSynthesis.speak(u); }); }
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let ttsLvl=0;
+let spkGate=false, spkOn=false;
+function voiceLevel(){ if(spkGate&&!spkOn) return 0; if(ACTIVE.size&&analyser){ analyser.getFloatTimeDomainData(abuf); let s=0; for(let i=0;i<abuf.length;i++) s+=abuf[i]*abuf[i]; return Math.min(1,Math.sqrt(s/abuf.length)*5.5); }
+  if(speaking){ ttsLvl += ((0.25+Math.random()*0.5)-ttsLvl)*0.3; return ttsLvl; } return 0; }
+function hookBall(){ if(window.Ball){ Ball.setLevelFn(voiceLevel); } }
+addEventListener('ballready',hookBall); hookBall();
+
+// ================= ROZHODNUTIE: fluidný puk =================
+const choiceEl=$('#choice'), puck=$('#puck'), chips={up:$('.chip.u'),left:$('.chip.l'),right:$('.chip.r'),down:$('.chip.d')};
+const px=new Spring(0,{damping:1,response:.4}), py=new Spring(0,{damping:1,response:.4}), pScale=new Spring(1,{damping:.8,response:.3});
+let chipP={up:0,left:0,right:0,down:0};
+function renderPuck(){ puck.style.transform=`translate(${px.v}px,${py.v}px) scale(${pScale.v})`;
+  const R=Math.min(innerWidth,innerHeight)*0.28; window.Ball&&Ball.setTilt(px.v/R,py.v/R); const dir=dominant(px.v,py.v); const amt=Math.min(1,Math.max(Math.abs(px.v),Math.abs(py.v))/R);
+  for(const d in chips){ const p = d===dir?amt:0; chipP[d]=p; const c=chips[d];
+    const base = d==='right'||d==='left' ? 'translateY(-50%)' : 'translateX(-50%)';
+    const nudge = {right:`translateX(${-p*10}px)`,left:`translateX(${p*10}px)`,down:`translateY(${-p*10}px)`,up:`translateY(${p*10}px)`}[d];
+    c.style.transform=`${base} ${nudge} scale(${1+p*0.08})`; c.style.filter = dir && d!==dir ? `opacity(${1-amt*0.6})` : '';
+    c.style.background = p>0.05 ? `rgba(255,208,138,${0.10+p*0.22})` : ''; } }
+px.onUpdate=py.onUpdate=pScale.onUpdate=renderPuck;
+function dominant(x,y){ if(Math.hypot(x,y)<8) return null; return Math.abs(x)>Math.abs(y)?(x>0?'right':'left'):(y>0?'down':'up'); }
+
+let pendingDir=null; const emitDir=d=>{ if(pendingDir){ const f=pendingDir; pendingDir=null; f(d); } }; const waitDir=()=>new Promise(r=>pendingDir=r);
+let drag=null;
+choiceEl.addEventListener('pointerdown',e=>{ if(!choiceEl.classList.contains('on')) return; if(e.target.closest('.chip')) return;
+  document.body.classList.add('holding'); choiceEl.setPointerCapture(e.pointerId); drag={id:e.pointerId,sx:e.clientX-px.v,sy:e.clientY-py.v,hist:[]};
+  Springs.delete(px); Springs.delete(py); px.active=py.active=false; pScale.to(1.12,{damping:.8,response:.25}); });
+choiceEl.addEventListener('pointermove',e=>{ if(!drag||e.pointerId!==drag.id) return; const R=Math.min(innerWidth,innerHeight)*0.28;
+  let x=e.clientX-drag.sx, y=e.clientY-drag.sy; // rubber-band past the commit radius
+  const ax=Math.abs(x)>R?Math.sign(x)*(R+rubber(Math.abs(x)-R,R)):x, ay=Math.abs(y)>R?Math.sign(y)*(R+rubber(Math.abs(y)-R,R)):y;
+  px.jump(ax); py.jump(ay); drag.hist.push({x:e.clientX,y:e.clientY,t:performance.now()}); if(drag.hist.length>6) drag.hist.shift(); renderPuck(); });
+function endDrag(e){ if(!drag||e.pointerId!==drag.id) return; const h=drag.hist; drag=null; pScale.to(1); setTimeout(()=>{ if(!drag) document.body.classList.remove('holding'); },350);
+  let vx=0,vy=0; if(h.length>1){ const a=h[0],b=h[h.length-1],dt=Math.max(16,b.t-a.t)/1000; vx=(b.x-a.x)/dt; vy=(b.y-a.y)/dt; }
+  const R=Math.min(innerWidth,innerHeight)*0.28; const fx=px.v+project(vx), fy=py.v+project(vy); const d=dominant(fx,fy);
+  const dist = d==='left'||d==='right'?Math.abs(fx):Math.abs(fy);
+  if(d && dist>R*0.85){ commit(d,vx,vy); }
+  else { px.to(0,{velocity:vx,damping:.8,response:.35}); py.to(0,{velocity:vy,damping:.8,response:.35}); } }
+choiceEl.addEventListener('pointerup',endDrag); choiceEl.addEventListener('pointercancel',endDrag);
+Object.values(chips).forEach(c=>c.addEventListener('pointerdown',e=>{ e.stopPropagation(); c.style.transform+=' scale(.96)'; }));
+Object.values(chips).forEach(c=>c.addEventListener('click',()=>commit(c.dataset.d,0,0)));
+addEventListener('keydown',e=>{ if(!Q.length) return; const m={ArrowRight:'right',ArrowLeft:'left',ArrowDown:'down',ArrowUp:'up'};
+  if(e.key===' '){ e.preventDefault(); if(paused) resumeGame(); else pauseGame(); return; }
+  if(m[e.key]&&choiceEl.classList.contains('on')){ e.preventDefault(); document.body.classList.add('kbd'); commit(m[e.key],0,0); }
+  else if(e.key==='ArrowLeft') back(); else if(e.key==='ArrowRight') fwd(); });
+async function commit(d,vx,vy){ if(!pendingDir) return; if(paused) togglePause(); try{ navigator.vibrate&&navigator.vibrate(d==='up'?6:14); }catch(_){}
+  const c=chips[d].getBoundingClientRect(), p=puck.getBoundingClientRect(); const tx=px.v+(c.left+c.width/2)-(p.left+p.width/2), ty=py.v+(c.top+c.height/2)-(p.top+p.height/2);
+  if(d!=='up' && curChoice && !curChoice.opts[d]){ px.to(0,{velocity:vx,damping:.8,response:.35}); py.to(0,{velocity:vy,damping:.8,response:.35}); return; }
+  if(d==='up'){ px.to(0,{velocity:vx,damping:.8,response:.35}); py.to(0,{velocity:vy,damping:.8,response:.35}); emitDir('up'); return; }
+  pScale.to(0.35,{damping:1,response:.3}); px.to(tx,{velocity:vx,damping:1,response:.3}); await py.to(ty,{velocity:vy,damping:1,response:.3}); emitDir(d); }
+function resetPuck(){ px.jump(0); py.jump(0); pScale.jump(1); }
+
+const DIRWORD={right:'Doprava',left:'Doľava',down:'Dole'};
+async function runChoice(c){
+  inChoice=true;
+  curChoice=c; ['right','left','down'].forEach(d=>{ const o=c.opts[d]; chips[d].style.display=o?'':'none'; if(o) chips[d].querySelector('span').textContent=o.label; });
+  $('#prompt .txt').textContent=c.q.text; resetPuck(); clearSub(); document.body.classList.remove('holding'); choiceEl.classList.add('on'); orb.classList.remove('on'); document.body.classList.add('choosing'); window.Ball&&Ball.setRole('sys');
+  const read=async(withCue)=>{ const g=++speakGen; if(withCue){ SFX.choiceIn(); await sleep(700); if(g!==speakGen) return; } await speak(c.q.text,c.q.who,c.q.id); };
+  choiceReread=()=>{ SFX.tensionOn(); read(false); };
+  SFX.tensionOn(); if(!paused) read(true); let d=await waitDir();
+  while(d==='up'){ speakGen++; cancelAll(); await sleep(150); read(false); d=await waitDir(); }
+  speakGen++; cancelAll(); choiceReread=null; SFX.tensionOff(); if(d!=='__nav') SFX.choicePick();
+  if(d==='__nav'){ inChoice=false; choiceEl.classList.remove('on'); document.body.classList.remove('choosing'); window.Ball&&Ball.setTilt(0,0); return 'nav'; }
+  state[c.id]={label:c.label,pick:c.opts[d].label,value:c.opts[d].value,secret:!!c.secret,dir:d};
+  Q.splice(ip+1,0,...c.opts[d].then); floor=ip+1;
+  await sleep(250); choiceEl.classList.remove('on'); document.body.classList.remove('choosing'); window.Ball&&Ball.setTilt(0,0); inChoice=false; await sleep(300); return 'done'; }
+
+// ================= PREHRÁVANIE: pauza / späť / ďalej =================
+let curChoice=null, Q=[], ip=0, floor=0, paused=false, inChoice=false, curWait=null, lineStart=0, choiceReread=null, resumeWaiter=null;
+function interrupt(){ speakGen++; cancelAll(); if(curWait){ const f=curWait; curWait=null; f(); } }
+function sleepI(ms){ return new Promise(r=>{ const tm=setTimeout(()=>{ curWait=null; r(); },ms); curWait=()=>{ clearTimeout(tm); r(); }; }); }
+const untilPlaying=()=>paused?new Promise(r=>resumeWaiter=r):Promise.resolve();
+function updateProgress(){ $('#prog i').style.width=(Q.length?Math.min(100,ip/Q.length*100):0)+'%'; }
+function applySceneAt(i){ for(let j=i;j>=0;j--) if(Q[j]&&Q[j].t==='chapter'){ const el=$('#chapter'); el.querySelector('.k').textContent=Q[j].k; el.querySelector('.k').style.display=Q[j].k?'':'none'; el.querySelector('.t').textContent=Q[j].text; $('#chName').textContent=Q[j].text; break; } for(let j=i;j>=0;j--) if(Q[j]&&Q[j].t==='amb'){ setScene(Q[j].scene); visualScene(Q[j].scene); return; } }
+function playDlg(s){ const lines=DLG[s.id]||[]; const g0=speakGen;
+  if(!BUF[s.id]){ return (async()=>{ for(const l of lines){ const r=await speak(l.text,l.who); if(r!=='done') return r; } return 'done'; })(); }
+  return new Promise(res=>{ const src=ctx.createBufferSource(); src.buffer=BUF[s.id]; src.connect(voiceBus[s.bus||'dry']);
+    let done=false, tm=null; const fin=()=>{ if(done) return; done=true; clearTimeout(tm); if(curVoice&&curVoice.src===src) curVoice=null; res(g0===speakGen?'done':'int'); };
+    curVoice={src,fin}; ACTIVE.add(src); src.onended=()=>{ ACTIVE.delete(src); fin(); }; src.start();
+    lines.forEach((l,i)=>{ dlgTimers.push(setTimeout(()=>showSub(l.who,l.text),l.at*1000));
+      const nx=lines[i+1]; if(l.end!=null && (!nx || nx.at>l.end+1.0)) dlgTimers.push(setTimeout(()=>{ if(g0===speakGen) clearSub(); },(l.end+0.6)*1000)); });
+    const sp=SPK[s.id]; if(sp){ spkGate=true; spkOn=false;
+      sp.forEach(([a,b,w])=>{ dlgTimers.push(setTimeout(()=>{ spkOn=true; setSpeaker(w); },a*1000)); dlgTimers.push(setTimeout(()=>{ spkOn=false; window.Ball&&Ball.setRole('idle'); },b*1000+120)); }); }
+    (s.cues||[]).forEach(c=>dlgTimers.push(setTimeout(()=>{ if(c.sfx&&SFX[c.sfx]) SFX[c.sfx](); if(c.vis) visualScene(c.vis); },c.at*1000)));
+    tm=setTimeout(fin, Math.max(0,BUF[s.id].duration-0.1)*1000); }); }
+async function playFx(s){ if(s.scene){ setTimeout(()=>{ setScene(s.scene); visualScene(s.scene); }, 400); }
+  const b=SFXBUF[s.name]; if(!b){ await sleepI(s.fallbackMs||1000); return 'done'; }
+  const src=ctx.createBufferSource(); src.buffer=b; const g=gain(0.9); src.connect(g); g.connect(master); src.start(); ACTIVE.add(src); src.onended=()=>ACTIVE.delete(src);
+  await sleepI(Math.max(0.3,b.duration-(s.tail||0.8))*1000); return 'done'; }
+async function exec(s){ switch(s.t){
+  case 'dlg': lastSayRole=null; lineStart=performance.now(); return playDlg(s);
+  case 'play': clearSub(); return playFx(s);
+  case 'branch': { const pick=(state[s.on]&&state[s.on].dir)||'left'; Q.splice(ip+1,0,...(s.map[pick]||[])); return 'done'; }
+  case 'say': if(lastSayRole===s.who) await sleepI(340); else await sleepI(60); lastSayRole=s.who; lineStart=performance.now(); return speak(s.text,s.who,VOICE_IDS[s.text],s.early);
+  case 'sfxwait': SFX[s.name](); if(SFXBUF[s.name]) await sleepI((s.name==='bump'?1.7:SFXHIT[s.name]+0.55)*1000); return 'done';
+  case 'sfx': SFX[s.name](); return 'done';
+  case 'amb': setScene(s.scene); visualScene(s.scene); return 'done';
+  case 'wait': lastSayRole=null; clearSub(); if(s.ms>1500) window.Ball&&Ball.setRole('idle'); await sleepI(s.ms); return 'done';
+  case 'chapter': showChapter(s.k,s.text); return 'done';
+  case 'choice': return runChoice(s);
+  case 'end': ip=Q.length; clearSave(); showEnd(); return 'end'; } }
+let looping=false, jumped=false;
+async function play(){ looping=true; while(ip<Q.length){ await untilPlaying(); const my=ip, s=Q[ip]; const r=await exec(s); if(jumped){ jumped=false; continue; } if(r==='end') break;
+    if(paused && ip===my && ['say','wait','dlg','play'].includes(s.t)) continue; if(ip===my) ip++; updateProgress(); saveProgress(); } looping=false; }
+function restart(){ if(!Q.length) return; try{ navigator.vibrate&&navigator.vibrate(10); }catch(_){}
+  for(const k in state) delete state[k];
+  if(paused){ paused=false; document.body.classList.remove('paused'); window.Ball&&Ball.setPaused(false); $('#bPlay').setAttribute('aria-label','Pauza'); ctx&&ctx.resume(); const r=resumeWaiter; resumeWaiter=null; r&&r(); }
+  $('#end').classList.add('hidden'); $('#topbar').classList.add('on');
+  Q=SCRIPT.slice(); ip=0; floor=0; updateProgress();
+  if(looping){ jumped=true; if(inChoice) emitDir('__nav'); else interrupt(); } else play(); }
+function togglePause(){ if(!Q.length||ip>=Q.length) return; try{ navigator.vibrate&&navigator.vibrate(6); }catch(_){}
+  if(paused){ paused=false; document.body.classList.remove('paused'); window.Ball&&Ball.setPaused(false); $('#bPlay').setAttribute('aria-label','Pauza'); ctx&&ctx.resume();
+    if(inChoice&&choiceReread) choiceReread(); const r=resumeWaiter; resumeWaiter=null; r&&r(); }
+  else { paused=true; document.body.classList.add('paused'); window.Ball&&Ball.setPaused(true); $('#bPlay').setAttribute('aria-label','Prehrať'); ctx&&ctx.suspend();
+    if(inChoice){ speakGen++; cancelAll(); } else interrupt(); } }
+function previewLine(i){ const s=Q[i]; if(s&&s.t==='say') showSub(s.who,s.text); else if(s&&s.t==='dlg'&&DLG[s.id]&&DLG[s.id][0]) showSub(DLG[s.id][0].who,DLG[s.id][0].text); }
+function back(){ if(!Q.length||ip>=Q.length) return; let target=-1;
+  if(!inChoice && ['say','dlg'].includes(Q[ip].t) && !paused && performance.now()-lineStart>2200) target=ip;   // restart current line, like a music player
+  else for(let j=ip-1;j>=floor;j--) if(['say','dlg'].includes(Q[j].t)){ target=j; break; }
+  if(target<0){ if(['say','dlg'].includes(Q[ip].t)) target=ip; else return; }
+  ip=target; applySceneAt(target); updateProgress();
+  if(inChoice){ emitDir('__nav'); } else interrupt();
+  if(paused) previewLine(target); }
+function fwd(){ if(!Q.length||ip>=Q.length||inChoice) return;
+  if(!paused){ interrupt(); return; }
+  let j=ip+1; while(j<Q.length && !['say','dlg','choice','end'].includes(Q[j].t)){ if(Q[j].t==='amb'){ setScene(Q[j].scene); visualScene(Q[j].scene); } j++; }
+  ip=j; updateProgress(); previewLine(j); }
+$('#bPlay').addEventListener('click',()=>{ if(paused) resumeGame(); else pauseGame(); }); $('#bBack').addEventListener('click',back); $('#bFwd').addEventListener('click',fwd);
+
+// ================= SLUČKA =================
+const state={};
+function showEnd(){ clearSub(); window.Ball&&Ball.setRole('idle'); orb.classList.remove('on'); $('#topbar').classList.remove('on');
+  $('#sum').innerHTML=Object.values(state).map(v=>`<div class="row${v.secret?' secret':''}"><span>${v.label}</span>${v.pick} · <em>${v.value}</em></div>`).join('')
+    + `<div class="row" style="font-size:12px;color:var(--fg3)">Toto zhrnutie je len pre autora. Hráč ho neuvidí.</div>`;
+  $('#end').classList.remove('hidden'); materialize($('#end .card')); menuMusicOn(); }
+function materialize(el){ const s=new Spring(0,{damping:1,response:.55}); s.onUpdate=v=>{ el.style.opacity=v; el.style.transform=`scale(${0.96+v*0.04})`; el.style.filter=`blur(${(1-v)*10}px)`; }; return s.to(1); }
+async function dematerialize(el){ const s=new Spring(1,{damping:1,response:.4}); s.onUpdate=v=>{ el.style.opacity=v; el.style.transform=`scale(${0.96+v*0.04})`; el.style.filter=`blur(${(1-v)*10}px)`; }; await s.to(0); }
+$('#pSubs').addEventListener('click',()=>{ subsOn=!subsOn; $('#pSubs').textContent='Titulky: '+(subsOn?'zapnuté':'vypnuté'); subs.classList.toggle('hide',!subsOn); try{ localStorage.setItem('pripadEva.subs',subsOn?'1':'0'); }catch(e){} });
+
+// ================= MENU, PAUZA, ULOŽENIE =================
+const SAVE_KEY='pripadEva.v1';
+// --- mysterious music for main menu and pause (plain <audio>, so it keeps playing while the game's audio is suspended)
+const menuMusic=new Audio('s/menu.mp3'); menuMusic.loop=true; menuMusic.volume=0; menuMusic.preload='auto';
+let mmTimer=null, mmWant=false;
+function mmFade(to,ms){ clearInterval(mmTimer); const from=menuMusic.volume, t0=performance.now();
+  mmTimer=setInterval(()=>{ const k=Math.min(1,(performance.now()-t0)/ms); menuMusic.volume=Math.max(0,Math.min(1,from+(to-from)*k)); if(k>=1){ clearInterval(mmTimer); if(to===0) menuMusic.pause(); } },40); }
+let musicMuted=false; try{ musicMuted=localStorage.getItem('pripadEva.music')==='0'; }catch(e){}
+function syncMusicUI(){ const b=$('#musicBtn'); if(b){ b.classList.toggle('off',musicMuted); b.title=musicMuted?'Hudba vypnutá':'Hudba zapnutá'; } const p=$('#pMusic'); if(p) p.textContent='♪ Hudba: '+(musicMuted?'vypnutá':'zapnutá'); }
+function toggleMusic(){ musicMuted=!musicMuted; try{ localStorage.setItem('pripadEva.music',musicMuted?'0':'1'); }catch(e){} syncMusicUI(); if(musicMuted) mmFade(0,400); else if(mmWant){ const pr=menuMusic.play(); if(pr&&pr.catch) pr.catch(()=>{}); mmFade(0.55,800); } }
+function menuMusicOn(){ mmWant=true; if(musicMuted) return; const pr=menuMusic.play(); if(pr&&pr.catch) pr.catch(()=>{}); mmFade(0.55,1800); }
+function menuMusicOff(ms=900){ mmWant=false; mmFade(0,ms); }
+// browsers only allow sound after the first touch: start the menu music on the first tap if the menu is still open
+addEventListener('pointerdown',()=>{ if(mmWant&&!musicMuted&&menuMusic.paused){ const pr=menuMusic.play(); if(pr&&pr.catch) pr.catch(()=>{}); } },{capture:true});
+function saveProgress(){ try{ if(!Q.length||ip>=Q.length) return; localStorage.setItem(SAVE_KEY,JSON.stringify({Q,ip,floor,state,t:Date.now()})); }catch(e){} }
+function loadSave(){ try{ const d=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); return d&&Array.isArray(d.Q)&&d.Q.length?d:null; }catch(e){ return null; } }
+function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+try{ if(localStorage.getItem('pripadEva.subs')==='0'){ subsOn=false; subs.classList.add('hide'); $('#pSubs').textContent='Titulky: vypnuté'; } }catch(e){}
+let gameActive=false;
+function refreshMenu(){ const has=gameActive||!!loadSave(); $('#cont').hidden=!has; $('#go').classList.toggle('ghost',has); $('#menuMain').hidden=false; $('#menuConfirm').hidden=true; const ms=$('#menuScenes'); if(ms) ms.hidden=true; }
+async function ensureAudio(btn,label){
+  try{ speechSynthesis.cancel(); const w=new SpeechSynthesisUtterance(' '); w.volume=0; speechSynthesis.speak(w); }catch(e){}
+  if(!ctx){ initAudio(); buildVoiceChain(); startDucking(voiceLevel); } else ctx.resume();
+  if(!Object.keys(BUF).length){ btn.disabled=true; btn.textContent='Načítavam hlasy… 0 %'; await preload(p=>btn.textContent='Načítavam hlasy… '+Math.round(p*100)+' %'); btn.disabled=false; btn.textContent=label; }
+  await loadVoices(); }
+async function hideCard(el){ await dematerialize(el.querySelector('.card')); el.classList.add('hidden'); el.querySelector('.card').style.cssText=''; if(el.id==='start') document.body.classList.remove('inmenu'); }
+function setPausedUI(on){ paused=on; document.body.classList.toggle('paused',on); window.Ball&&Ball.setPaused(on); $('#bPlay').setAttribute('aria-label',on?'Prehrať':'Pauza'); }
+function pauseGame(){ if(!Q.length||ip>=Q.length||paused) return; togglePause(); saveProgress(); menuMusicOn(); $('#pauseMenu').classList.remove('hidden'); materialize($('#pauseMenu .card')); }
+async function resumeGame(){ menuMusicOff(700); if(!$('#pauseMenu').classList.contains('hidden')) await hideCard($('#pauseMenu')); if(paused) togglePause(); }
+async function toMenu(){ saveProgress(); await hideCard($('#pauseMenu')); $('#topbar').classList.remove('on'); clearSub(); refreshMenu(); document.body.classList.add('inmenu'); $('#start').classList.remove('hidden'); materialize($('#start .card')); }
+async function newGame(){
+  menuMusicOff(1200);
+  await ensureAudio($('#goYes').offsetParent?$('#goYes'):$('#go'), 'Začať novú hru'); clearSave();
+  await hideCard($('#start')); $('#topbar').classList.add('on'); $('#end').classList.add('hidden');
+  for(const k in state) delete state[k];
+  if(gameActive&&looping){ restart(); if(paused){ /* restart() resumes */ } return; }
+  gameActive=true; Q=SCRIPT.slice(); ip=0; floor=0; setPausedUI(false); updateProgress(); await play(); }
+async function continueGame(){
+  menuMusicOff(1200);
+  await ensureAudio($('#cont'),'Pokračovať');
+  await hideCard($('#start')); $('#topbar').classList.add('on');
+  if(gameActive&&looping){ if(paused) togglePause(); return; }
+  const d=loadSave(); if(!d){ return newGame(); }
+  for(const k in state) delete state[k]; Object.assign(state,d.state||{});
+  Q=d.Q; ip=Math.min(d.ip,Q.length-1); floor=d.floor||0;
+  // resume from the start of the current line
+  while(ip>0 && !['say','dlg','choice','chapter'].includes(Q[ip].t)) ip--;
+  gameActive=true; setPausedUI(false); applySceneAt(ip); updateProgress(); await play(); }
+const JUMPS=[
+  ['Úvod (sprievodca)', 0],
+  ['Kapitola 1 – Výjazd', ()=>SCRIPT.findIndex(x=>x.t==='chapter'&&x.text==='Výjazd')],
+  ['Kapitola 1 – Rozhodnutie (Mobil)', ()=>SCRIPT.findIndex(x=>x.t==='choice'&&x.id==='c1')],
+  ['Kapitola 1 – Rozhodnutie (Šimon)', ()=>SCRIPT.findIndex(x=>x.t==='choice'&&x.id==='c2')],
+  ['Kapitola 2 – Stanica', ()=>SCRIPT.findIndex(x=>x.t==='chapter'&&x.text==='Stanica')],
+  ['Kapitola 2 – Rozhodnutie (Eva)', ()=>SCRIPT.findIndex(x=>x.t==='choice'&&x.id==='c4')],
+  ['Kapitola 2 – Večer', ()=>SCRIPT.findIndex(x=>x.mark==='vecer')],
+  ['Kapitola 3 – Hovor o 1:47', ()=>SCRIPT.findIndex(x=>x.t==='chapter'&&x.text==='Hovor o 1:47')],
+  ['Kapitola 3 – Rozhodnutie (Pomoc)', ()=>SCRIPT.findIndex(x=>x.t==='choice'&&x.id==='k3a')],
+  ['Kapitola 3 – Rozhodnutie (Obálka)', ()=>SCRIPT.findIndex(x=>x.t==='choice'&&x.id==='k3b')],
+  ['Kapitola 3 – Rozhodnutie (Babka)', ()=>SCRIPT.findIndex(x=>x.t==='choice'&&x.id==='k3c')],
+];
+async function jumpTo(ix){
+  if(ix<0) return; menuMusicOff(1000);
+  await ensureAudio($('#scenesBack'),'Späť'); await hideCard($('#start')); $('#topbar').classList.add('on'); $('#end').classList.add('hidden');
+  for(const k in state) delete state[k];
+  if(paused){ paused=false; document.body.classList.remove('paused'); window.Ball&&Ball.setPaused(false); ctx&&ctx.resume(); const r=resumeWaiter; resumeWaiter=null; r&&r(); }
+  Q=SCRIPT.slice(); ip=ix; floor=ix; gameActive=true; setPausedUI(false); applySceneAt(ip); updateProgress();
+  if(looping){ jumped=true; if(inChoice) emitDir('__nav'); else interrupt(); } else play(); }
+(function(){ const L=$('#sceneList'); JUMPS.forEach(([name,f])=>{ const b=document.createElement('button'); b.className='cta ghost'; b.style.cssText='font-size:15px;padding:12px 16px'; b.textContent=name; b.addEventListener('click',()=>jumpTo(typeof f==='function'?f():f)); L.appendChild(b); }); })();
+$('#scenesBtn').addEventListener('click',()=>{ $('#menuMain').hidden=true; $('#menuScenes').hidden=false; });
+$('#scenesBack').addEventListener('click',()=>{ $('#menuScenes').hidden=true; $('#menuMain').hidden=false; });
+$('#cont').addEventListener('click',continueGame);
+$('#go').addEventListener('click',()=>{ if(gameActive||loadSave()){ $('#menuMain').hidden=true; $('#menuConfirm').hidden=false; } else newGame(); });
+$('#goNo').addEventListener('click',()=>{ $('#menuConfirm').hidden=true; $('#menuMain').hidden=false; });
+$('#goYes').addEventListener('click',newGame);
+$('#pResume').addEventListener('click',resumeGame);
+$('#musicBtn').addEventListener('click',e=>{ e.stopPropagation(); toggleMusic(); });
+$('#pMusic').addEventListener('click',toggleMusic); syncMusicUI();
+$('#pMenu').addEventListener('click',toMenu);
+$('#again').addEventListener('click',async()=>{ menuMusicOff(1000); clearSave(); await hideCard($('#end')); $('#topbar').classList.add('on'); gameActive=true; for(const k in state) delete state[k]; Q=SCRIPT.slice(); ip=0; floor=0; setPausedUI(false); updateProgress(); await play(); });
+document.body.classList.add('inmenu'); refreshMenu(); menuMusicOn();
+visualScene('car'); rainOn=true; materialize($('#start .card'));
+</script>
+</body>
+</html>
