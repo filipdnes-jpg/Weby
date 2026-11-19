@@ -1,0 +1,684 @@
+[
+ {
+  "t": "sec",
+  "id": "uvod"
+ },
+ {
+  "t": "sfx",
+  "sec": "uvod",
+  "text": "[SFX: tikanie hodín, dážď na parapete, babka chrápe za stenou. 4 sekundy ticha.]"
+ },
+ {
+  "t": "sfx",
+  "sec": "uvod",
+  "text": "[SFX: mobil vibruje na nočnom stolíku. Dlho.]"
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_01",
+  "who": "nikol_think",
+  "text": "[sleepy, mumbling] BOOŽE to kto mi teraz volá… Koľko je… Jedna štyridsaťsedem?"
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_02",
+  "who": "nikol_think",
+  "text": "[confused] Eva?"
+ },
+ {
+  "t": "sfx",
+  "sec": "uvod",
+  "text": "[SFX: šuchot periny, prijatie hovoru]"
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_03",
+  "who": "nikol",
+  "text": "[groggy, half-smiling] Eva? Čo je… Nevydaril sa ti ten stoosemdesiatcentimetrový?"
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_04",
+  "who": "eva",
+  "text": "[crying, shaky breathing] Nikuška… prepáč, že ťa budím. Ja… Ja... [sobbing]. Spravila som niečo hrozné."
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_05",
+  "who": "nikol",
+  "text": "[alarmed] Čo sa stalo? Si v poriadku?"
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_06",
+  "who": "eva",
+  "text": "[panicked] Nie. Nie som. Marek… on bol po tom víne úplne iný. Chytil ma pod krkom, Nika. Pri stole. [gasping] Ja som ho odstrčila… a... a on spadol… a udrel sa o roh stola."
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_07",
+  "who": "nikol",
+  "text": "[whispering] Eva…"
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_08",
+  "who": "eva",
+  "text": "[crying] Nedýcha, Nika. Ja som tam stála a čakala, že sa pohne. A on sa nepohol."
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_09",
+  "who": "nikol_think",
+  "text": "[tense] Nie. Nie, nie, nie. Toto sa nedeje."
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_10",
+  "who": "nikol",
+  "text": "[urgent, quiet] Kde si teraz?"
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_11",
+  "who": "eva",
+  "text": "[shaky] Utiekla som. Sedím v aute. Neviem ani, kde som… niekde za mestom. Aj mňa udrel, trochu krvácam, ale to nič."
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_12",
+  "who": "nikol",
+  "text": "[worried] Krvácaš? Odkiaľ?"
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_13",
+  "who": "eva",
+  "text": "[weak, dismissive] Z ruky. To nič, Niku, to nič… Počúvaj ma."
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_14",
+  "who": "nikol",
+  "text": "[firm, worried] Eva, musím zavolať záchranku. Aj pre neho. Možno ešte žije."
+ },
+ {
+  "t": "sfx",
+  "sec": "uvod",
+  "text": "[2 sekundy ticha]"
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_15",
+  "who": "eva",
+  "text": "[quiet] Nežije, Nika. Ja viem, ako vyzerá mŕtvy človek. Aj ty to vieš."
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_16",
+  "who": "eva",
+  "text": "[crying] A keď tam príde polícia, je koniec. Ja už mám tú vec spred troch rokov. S Robom. Podmienku. Nikto mi neuverí, že som sa bránila."
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_17",
+  "who": "eva",
+  "text": "[breaking down] Zoberú mi Tobiho, Nika. Zoberú mi ho."
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_18",
+  "who": "nikol_think",
+  "text": "[slow] Tobiáš. Šesť rokov. Včera mi ukazovala jeho kresbu. Dinosaurus v policajnej čiapke."
+ },
+ {
+  "t": "line",
+  "sec": "uvod",
+  "id": "k3_uvod_19",
+  "who": "nikol_think",
+  "text": "[torn, quiet] A ja som policajtka. Ja by som teraz mala…"
+ },
+ {
+  "t": "sfx",
+  "sec": "uvod",
+  "text": "[SFX: tikanie hodín zosilnie]"
+ },
+ {
+  "t": "choice",
+  "sec": "uvod",
+  "id": "k3_uvod_q",
+  "who": "nikol_think",
+  "text": "[torn, whispering to herself] Urobím, čo bude treba? Alebo jej poradím, aby sa prihlásila? Alebo si to radšej aj nahrám?"
+ },
+ {
+  "t": "opt",
+  "text": "vpravo: Pomôžem ti"
+ },
+ {
+  "t": "opt",
+  "text": "vľavo: Musíš sa prihlásiť"
+ },
+ {
+  "t": "opt",
+  "text": "dole: Sľúbiť a potajme nahrávať"
+ },
+ {
+  "t": "sec",
+  "id": "a1"
+ },
+ {
+  "t": "line",
+  "sec": "a1",
+  "id": "k3_a1_01",
+  "who": "nikol",
+  "text": "[firm, quiet] Dobre. Dobre, Eva. Pomôžem ti. Povedz mi, čo mám robiť."
+ },
+ {
+  "t": "line",
+  "sec": "a1",
+  "id": "k3_a1_02",
+  "who": "eva",
+  "text": "[relieved sob] Ďakujem… ďakujem, Nikuška. Ja som vedela, že ty…"
+ },
+ {
+  "t": "line",
+  "sec": "a1",
+  "id": "k3_a1_03",
+  "who": "eva",
+  "text": "[collecting herself] Musíš ísť ku mne do bytu. Kým tam niekto príde."
+ },
+ {
+  "t": "sec",
+  "id": "a2"
+ },
+ {
+  "t": "line",
+  "sec": "a2",
+  "id": "k3_a2_01",
+  "who": "nikol",
+  "text": "[steady] Eva, počúvaj ma. Musíš sa prihlásiť. Zavolaj stopäťdesiatosmičku a ja tam budem s tebou. Poviem, že si sa bránila. Budem pri tebe celý čas."
+ },
+ {
+  "t": "sfx",
+  "sec": "a2",
+  "text": "[2 sekundy ticha]"
+ },
+ {
+  "t": "line",
+  "sec": "a2",
+  "id": "k3_a2_02",
+  "who": "eva",
+  "text": "[flat, hurt] Takže aj ty…"
+ },
+ {
+  "t": "sfx",
+  "sec": "a2",
+  "text": "[SFX: pípnutie, hovor ukončený]"
+ },
+ {
+  "t": "line",
+  "sec": "a2",
+  "id": "k3_a2_03",
+  "who": "nikol",
+  "text": "[panicked] Eva? Eva!"
+ },
+ {
+  "t": "sfx",
+  "sec": "a2",
+  "text": "[SFX: vytáčanie, vyzváňanie, nikto nedvíha]"
+ },
+ {
+  "t": "sfx",
+  "sec": "a2",
+  "text": "[SFX: pípnutie SMS]"
+ },
+ {
+  "t": "line",
+  "sec": "a2",
+  "id": "k3_a2_04",
+  "who": "nikol_think",
+  "text": "[reading, horrified] „Prepáč. Postaraj sa o Tobiho.“"
+ },
+ {
+  "t": "line",
+  "sec": "a2",
+  "id": "k3_a2_05",
+  "who": "nikol",
+  "text": "[panicked whisper] Nie… Eva, nerob to. Zodvihni to…"
+ },
+ {
+  "t": "sfx",
+  "sec": "a2",
+  "text": "[SFX: vytáčanie, hovor prijatý. Eva len plače.]"
+ },
+ {
+  "t": "line",
+  "sec": "a2",
+  "id": "k3_a2_06",
+  "who": "nikol",
+  "text": "[rushed] Dobre! Dobre. Prídem. Urobím, čo chceš. Len nerob nič hlúpe. Prosím ťa."
+ },
+ {
+  "t": "line",
+  "sec": "a2",
+  "id": "k3_a2_07",
+  "who": "eva",
+  "text": "[weak] Príď ku mne do bytu. Kým tam niekto príde."
+ },
+ {
+  "t": "sec",
+  "id": "a3"
+ },
+ {
+  "t": "line",
+  "sec": "a3",
+  "id": "k3_a3_01",
+  "who": "nikol",
+  "text": "[calm, quiet] Dobre, Eva. Pomôžem ti."
+ },
+ {
+  "t": "line",
+  "sec": "a3",
+  "id": "k3_a3_02",
+  "who": "nikol_think",
+  "text": "[whispering, guilty] Prepáč, Eva. Ale nemôžem riskovať, že sa z toho stane môj problém."
+ },
+ {
+  "t": "sfx",
+  "sec": "a3",
+  "text": "[SFX: tiché ťuknutie na displej, slabé pípnutie]"
+ },
+ {
+  "t": "line",
+  "sec": "a3",
+  "id": "k3_a3_03",
+  "who": "nikol_think",
+  "text": "[guilty, quiet] Nahrávanie beží. Nikdy si to neodpustím. Ale ani nebudem musieť, ak to nikdy nepoužijem."
+ },
+ {
+  "t": "line",
+  "sec": "a3",
+  "id": "k3_a3_04",
+  "who": "eva",
+  "text": "[relieved] Ďakujem, Nikuška… Príď ku mne do bytu. Kým tam niekto príde."
+ },
+ {
+  "t": "sec",
+  "id": "obalka"
+ },
+ {
+  "t": "line",
+  "sec": "obalka",
+  "id": "k3_obalka_01",
+  "who": "nikol",
+  "text": "[practical, quiet] Kľúče?"
+ },
+ {
+  "t": "line",
+  "sec": "obalka",
+  "id": "k3_obalka_02",
+  "who": "eva",
+  "text": "[weak] V kvetináči pri dverách. Ako vždy."
+ },
+ {
+  "t": "line",
+  "sec": "obalka",
+  "id": "k3_obalka_03",
+  "who": "eva",
+  "text": "[hesitant] A Nika… tú obálku, čo som ti dala. Máš ju u babky?"
+ },
+ {
+  "t": "line",
+  "sec": "obalka",
+  "id": "k3_obalka_04",
+  "who": "nikol",
+  "text": "[sleepy, quiet] Hej. V taške."
+ },
+ {
+  "t": "line",
+  "sec": "obalka",
+  "id": "k3_obalka_05",
+  "who": "eva",
+  "text": "[urgent] Zober ju so sebou. Prosím ťa. Nesmie ostať u babky. Nesmie ostať nikde."
+ },
+ {
+  "t": "line",
+  "sec": "obalka",
+  "id": "k3_obalka_06",
+  "who": "nikol",
+  "text": "[curious] Čo v nej je?"
+ },
+ {
+  "t": "sfx",
+  "sec": "obalka",
+  "text": "[1 sekunda ticha]"
+ },
+ {
+  "t": "line",
+  "sec": "obalka",
+  "id": "k3_obalka_07",
+  "who": "eva",
+  "text": "[evasive] Neskôr. Teraz nie. Sľúb mi, že ju zoberieš."
+ },
+ {
+  "t": "choice",
+  "sec": "obalka",
+  "id": "k3_obalka_q",
+  "who": "nikol_think",
+  "text": "[hesitant, to herself] Zoberiem ju? Alebo by som sa mala najskôr pozrieť, čo v nej je? Alebo ju tu proste nechám?"
+ },
+ {
+  "t": "opt",
+  "text": "vpravo: Zobrať ju neotvorenú"
+ },
+ {
+  "t": "opt",
+  "text": "vľavo: Otvoriť ju"
+ },
+ {
+  "t": "opt",
+  "text": "dole: Nechať ju u babky"
+ },
+ {
+  "t": "sec",
+  "id": "b1"
+ },
+ {
+  "t": "line",
+  "sec": "b1",
+  "id": "k3_b1_01",
+  "who": "nikol",
+  "text": "[sincere] Sľubujem. Zoberiem ju."
+ },
+ {
+  "t": "sfx",
+  "sec": "b1",
+  "text": "[SFX: zips tašky, papier]"
+ },
+ {
+  "t": "line",
+  "sec": "b1",
+  "id": "k3_b1_02",
+  "who": "nikol_think",
+  "text": "[quiet, loyal] Neotváraj, povedala. Tak neotváram."
+ },
+ {
+  "t": "sec",
+  "id": "b2"
+ },
+ {
+  "t": "line",
+  "sec": "b2",
+  "id": "k3_b2_01",
+  "who": "nikol",
+  "text": "[quiet] Dobre."
+ },
+ {
+  "t": "sfx",
+  "sec": "b2",
+  "text": "[SFX: mobil položený na perinu, tiché trhanie obálky]"
+ },
+ {
+  "t": "line",
+  "sec": "b2",
+  "id": "k3_b2_02",
+  "who": "nikol_think",
+  "text": "[guilty, quiet] Prepáč, Eva. Musím vedieť, do čoho idem."
+ },
+ {
+  "t": "line",
+  "sec": "b2",
+  "id": "k3_b2_03",
+  "who": "nikol_think",
+  "text": "[reading slowly] USB kľúč. A lístok. Jej písmo. „Ak sa mi niečo stane, daj to niekomu mimo nášho oddelenia.“"
+ },
+ {
+  "t": "line",
+  "sec": "b2",
+  "id": "k3_b2_04",
+  "who": "nikol_think",
+  "text": "[uneasy] Mimo nášho oddelenia? Eva, do čoho si sa to zase…"
+ },
+ {
+  "t": "line",
+  "sec": "b2",
+  "id": "k3_b2_05",
+  "who": "nikol_think",
+  "text": "[determined, quiet] Neskôr. Teraz je tu Marek."
+ },
+ {
+  "t": "sfx",
+  "sec": "b2",
+  "text": "[SFX: obálka do vnútorného vrecka bundy]"
+ },
+ {
+  "t": "sec",
+  "id": "b3"
+ },
+ {
+  "t": "line",
+  "sec": "b3",
+  "id": "k3_b3_01",
+  "who": "nikol",
+  "text": "[quick, lying] Hej. Mám ju."
+ },
+ {
+  "t": "sfx",
+  "sec": "b3",
+  "text": "[SFX: kroky po parketách, otvorenie skrinky, šuchot vlny]"
+ },
+ {
+  "t": "line",
+  "sec": "b3",
+  "id": "k3_b3_02",
+  "who": "nikol_think",
+  "text": "[quiet] Babkin košík s vlnou. Tam nikto hľadať nebude."
+ },
+ {
+  "t": "line",
+  "sec": "b3",
+  "id": "k3_b3_03",
+  "who": "nikol_think",
+  "text": "[guilty] Klamem jej. Prvýkrát za pätnásť rokov."
+ },
+ {
+  "t": "sec",
+  "id": "odchod"
+ },
+ {
+  "t": "line",
+  "sec": "odchod",
+  "id": "k3_odchod_01",
+  "who": "eva",
+  "text": "[weak] Nika? Ešte si tam?"
+ },
+ {
+  "t": "line",
+  "sec": "odchod",
+  "id": "k3_odchod_02",
+  "who": "nikol",
+  "text": "[rushed, firm] Som. Obliekam sa. Ostaň na telefóne. Nepoložíš mi to, jasné?"
+ },
+ {
+  "t": "line",
+  "sec": "odchod",
+  "id": "k3_odchod_03",
+  "who": "eva",
+  "text": "[weak] Nepoložím. Budem tu."
+ },
+ {
+  "t": "sfx",
+  "sec": "odchod",
+  "text": "[SFX: obliekanie, zips bundy, kľúče]"
+ },
+ {
+  "t": "sfx",
+  "sec": "odchod",
+  "text": "[SFX: vŕzganie dverí, šúchanie papúč]"
+ },
+ {
+  "t": "line",
+  "sec": "odchod",
+  "id": "k3_odchod_04",
+  "who": "babka",
+  "text": "[sleepy, old woman] Nikolka? Čo sa deje? Kam ideš v takom čase?"
+ },
+ {
+  "t": "line",
+  "sec": "odchod",
+  "id": "k3_odchod_05",
+  "who": "nikol_think",
+  "text": "[annoyed sigh] Babka. Samozrejme."
+ },
+ {
+  "t": "choice",
+  "sec": "odchod",
+  "id": "k3_odchod_q",
+  "who": "nikol_think",
+  "text": "[hesitant, to herself] Poviem jej pravdu alebo si niečo vymyslím?"
+ },
+ {
+  "t": "opt",
+  "text": "vpravo: Služba"
+ },
+ {
+  "t": "opt",
+  "text": "vľavo: Eva má problém"
+ },
+ {
+  "t": "sec",
+  "id": "sluzba"
+ },
+ {
+  "t": "line",
+  "sec": "sluzba",
+  "id": "k3_sluzba_01",
+  "who": "nikol",
+  "text": "[soft] Služba, babi. Volali ma. Choď spať."
+ },
+ {
+  "t": "line",
+  "sec": "sluzba",
+  "id": "k3_sluzba_02",
+  "who": "babka",
+  "text": "[confused, sleepy] V noci? Veď si mala voľno…"
+ },
+ {
+  "t": "line",
+  "sec": "sluzba",
+  "id": "k3_sluzba_03",
+  "who": "nikol",
+  "text": "[soft] Viem. Ráno ti to vysvetlím."
+ },
+ {
+  "t": "line",
+  "sec": "sluzba",
+  "id": "k3_sluzba_04",
+  "who": "babka",
+  "text": "[tender, a bit suspicious] Daj na seba pozor, dievča."
+ },
+ {
+  "t": "sec",
+  "id": "pravda"
+ },
+ {
+  "t": "line",
+  "sec": "pravda",
+  "id": "k3_pravda_01",
+  "who": "nikol",
+  "text": "[voice breaking] Eva má problém, babi. Veľký. Musím za ňou."
+ },
+ {
+  "t": "line",
+  "sec": "pravda",
+  "id": "k3_pravda_02",
+  "who": "babka",
+  "text": "[worried] Evička? Preboha… A zavolala si niekomu?"
+ },
+ {
+  "t": "line",
+  "sec": "pravda",
+  "id": "k3_pravda_03",
+  "who": "nikol",
+  "text": "[quiet, bitter] Ja som ten niekto, babi."
+ },
+ {
+  "t": "sfx",
+  "sec": "pravda",
+  "text": "[2 sekundy ticha]"
+ },
+ {
+  "t": "line",
+  "sec": "pravda",
+  "id": "k3_pravda_04",
+  "who": "babka",
+  "text": "[quiet] Tak choď. A zober si šál. A Nikolka… nech je to čokoľvek, rob len to, čo budeš vedieť ráno vysvetliť."
+ },
+ {
+  "t": "line",
+  "sec": "pravda",
+  "id": "k3_pravda_05",
+  "who": "nikol_think",
+  "text": "[quiet, uneasy] Rob len to, čo budeš vedieť ráno vysvetliť. Keby som tak vedela, aké bude ráno."
+ },
+ {
+  "t": "sec",
+  "id": "zaver"
+ },
+ {
+  "t": "sfx",
+  "sec": "zaver",
+  "text": "[SFX: dvere, schodisko, vonku silný dážď, odomknutie auta, štart motora a jeho chod]"
+ },
+ {
+  "t": "line",
+  "sec": "zaver",
+  "id": "k3_zaver_01",
+  "who": "eva",
+  "text": "[quiet, tired] Nikuška?"
+ },
+ {
+  "t": "line",
+  "sec": "zaver",
+  "id": "k3_zaver_02",
+  "who": "nikol",
+  "text": "[tired] Hm?"
+ },
+ {
+  "t": "line",
+  "sec": "zaver",
+  "id": "k3_zaver_03",
+  "who": "eva",
+  "text": "[weak, almost smiling] Ďakujem. Že si."
+ },
+ {
+  "t": "line",
+  "sec": "zaver",
+  "id": "k3_zaver_04",
+  "who": "nikol_think",
+  "text": "[determined, quiet] Eva je moja najlepšia kamarátka. Keby som jej teraz nepomohla ja, kto potom?"
+ },
+ {
+  "t": "sfx",
+  "sec": "zaver",
+  "text": "[SFX: rozjazd auta, stierače. Stmievanie.]"
+ }
+]
