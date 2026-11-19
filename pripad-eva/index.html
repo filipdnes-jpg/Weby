@@ -136,6 +136,45 @@ body.inmenu #subs,body.inmenu #orb,body.inmenu #who{opacity:0 !important;pointer
 .confirm small{display:block;font:500 13px var(--font);color:var(--fg3);margin-top:6px}
 #pauseMenu{z-index:7;background:rgba(5,7,13,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 
+
+/* ---------- ilustrované hlavné menu ---------- */
+#start{padding:0;background:#06080c;overflow:hidden}
+#start .art{position:absolute;inset:0;z-index:0;pointer-events:none}
+#start .art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:22% 55%;filter:saturate(.85) contrast(1.05);transform:scale(1.04);animation:artPan 34s ease-in-out infinite alternate}
+@keyframes artPan{0%,8%{object-position:22% 55%}92%,100%{object-position:88% 50%}}
+@media (prefers-reduced-motion:reduce){#start .art img,#start .art::after{animation:none}}
+@media (min-aspect-ratio:4/3){#start .art img{animation:artDrift 40s ease-in-out infinite alternate;object-position:50% 50%}}
+@keyframes artDrift{from{transform:scale(1.03)}to{transform:scale(1.1) translate3d(-1.5%,-1%,0)}}
+#start .art::before{content:"";position:absolute;inset:0;z-index:2;background:
+  linear-gradient(180deg,rgba(6,8,12,.92) 0%,rgba(6,8,12,.35) 26%,rgba(6,8,12,0) 42%,rgba(6,8,12,.15) 58%,rgba(6,8,12,.88) 80%,#06080c 100%),
+  radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.75) 100%)}
+#start .art::after{content:"";position:absolute;inset:-50% -10%;z-index:3;opacity:.13;
+  background:repeating-linear-gradient(104deg,transparent 0 46px,rgba(200,215,230,.5) 46px 47px,transparent 47px 93px);
+  background-size:180px 180px;animation:rainFall .55s linear infinite}
+@keyframes rainFall{from{transform:translate3d(0,0,0)}to{transform:translate3d(-40px,180px,0)}}
+#start .grain{position:absolute;inset:0;z-index:4;opacity:.09;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+#start .card{z-index:5;width:min(460px,100%);height:100%;max-height:100%;border-radius:0;background:none !important;border:0 !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
+  display:flex;flex-direction:column;justify-content:space-between;padding:max(48px,env(safe-area-inset-top)) 28px max(26px,env(safe-area-inset-bottom))}
+#start .title{text-align:center}
+#start .card .k{font:600 11px/1 Georgia,'Times New Roman',serif;letter-spacing:.42em;color:#b9ad90;margin-top:10px;padding-left:.42em}
+#start .card h1{margin:0;font:400 clamp(38px,11vw,54px)/1.05 'Cinzel','Trajan Pro',Georgia,'Times New Roman',serif;letter-spacing:.18em;padding-left:.18em;white-space:nowrap;text-transform:uppercase;color:#ece2c8;text-shadow:0 2px 18px rgba(0,0,0,.8),0 0 1px rgba(0,0,0,.9)}
+#start .orn{display:block;width:min(260px,70%);height:22px;margin:14px auto 0;color:#cdbf9c;opacity:.9}
+#start .bottom{display:flex;flex-direction:column;align-items:center}
+#start .menu{width:min(300px,100%);gap:4px;align-items:stretch}
+#start .cta{background:none;box-shadow:none;border:0;border-radius:0;padding:13px 10px;color:#ddd3bb;font:400 16px/1 Georgia,'Times New Roman',serif;letter-spacing:.16em;text-transform:uppercase;text-shadow:0 1px 8px rgba(0,0,0,.9);position:relative}
+#start .cta.ghost{background:none;border:0}
+#start #cont:not([hidden]),#start #cont[hidden]+#go,#start #goYes{color:#f3ead2;background:linear-gradient(180deg,rgba(28,32,36,.88),rgba(14,16,20,.92));border:1px solid #bfae86;border-radius:999px;margin-bottom:6px;box-shadow:0 0 0 3px rgba(10,12,15,.6),0 0 0 4px rgba(191,174,134,.35),0 8px 30px rgba(0,0,0,.6)}
+#start #cont:not([hidden])::before,#start #cont[hidden]+#go::before,#start #goYes::before,
+#start #cont:not([hidden])::after,#start #cont[hidden]+#go::after,#start #goYes::after{content:"◆";position:absolute;top:50%;transform:translateY(-50%);font-size:9px;color:#cdbf9c}
+#start #cont:not([hidden])::before,#start #cont[hidden]+#go::before,#start #goYes::before{left:16px}
+#start #cont:not([hidden])::after,#start #cont[hidden]+#go::after,#start #goYes::after{right:16px}
+#start .cta:active{transform:scale(.97)}
+#start .confirm{font:400 18px Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#ece2c8;text-align:center}
+#start .confirm small{font:italic 13px Georgia,serif;letter-spacing:0;text-transform:none;color:#b9ad90}
+#start #sceneList{max-height:46vh !important;gap:0 !important;-webkit-mask-image:linear-gradient(180deg,transparent,#000 6%,#000 94%,transparent)}
+#start #sceneList .cta{font-size:13px !important;padding:11px 8px !important;letter-spacing:.08em;border-bottom:1px solid rgba(205,191,156,.14) !important}
+#start .note{font:italic 12px Georgia,serif;color:#9d9277;margin-top:12px;text-align:center}
+#start .musicBtn{position:fixed;z-index:8;top:max(14px,env(safe-area-inset-top));right:14px;border-color:rgba(205,191,156,.4);color:#ddd3bb;background:rgba(10,12,15,.45)}
 #warn{display:none;margin-top:12px;font-size:13px;color:#ffb08a}
 .summary{text-align:left;margin:4px 0 22px;display:flex;flex-direction:column;gap:8px}
 .summary .row{background:rgba(255,255,255,.06);border-radius:14px;padding:11px 13px;font-size:14px;line-height:1.35}
@@ -187,14 +226,19 @@ body.inmenu #subs,body.inmenu #orb,body.inmenu #who{opacity:0 !important;pointer
 </div>
 
 <div id="start">
-  <div class="card glass">
-    <div class="k">Audio detektívka</div>
-    <h1>Prípad Eva</h1>
-    <div class="sub">Kapitola 1 · Hlas v slúchadle</div>
-    <button class="musicBtn" id="musicBtn" aria-label="Hudba v pozadí">♪</button>
+  <div class="art"><img src="s/menu.jpg" alt=""></div>
+  <div class="grain"></div>
+  <button class="musicBtn" id="musicBtn" aria-label="Hudba v pozadí">♪</button>
+  <div class="card">
+    <div class="title">
+      <h1>Prípad Eva</h1>
+      <svg class="orn" viewBox="0 0 260 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0 11H96M164 11H260"/><path d="M130 2l9 9-9 9-9-9z" fill="rgba(205,191,156,.15)"/><path d="M130 7l4 4-4 4-4-4z" fill="currentColor"/><circle cx="110" cy="11" r="4.5"/><circle cx="150" cy="11" r="4.5"/><path d="M96 11h9.5M154.5 11H164"/><circle cx="110" cy="11" r="1.2" fill="currentColor"/><circle cx="150" cy="11" r="1.2" fill="currentColor"/></svg>
+      <div class="k">Audio detektívka</div>
+    </div>
+    <div class="bottom">
     <div class="menu" id="menuMain">
       <button class="cta" id="cont" hidden>Pokračovať</button>
-      <button class="cta" id="go">Začať novú hru</button>
+      <button class="cta" id="go">Nová hra</button>
       <button class="cta ghost" id="scenesBtn">Vybrať scénu</button>
     </div>
     <div class="menu" id="menuScenes" hidden>
@@ -207,8 +251,9 @@ body.inmenu #subs,body.inmenu #orb,body.inmenu #who{opacity:0 !important;pointer
       <button class="cta" id="goYes">Áno, začať odznova</button>
       <button class="cta ghost" id="goNo">Zrušiť</button>
     </div>
-    <div class="note">🎧 Nasaď si slúchadlá a ponor sa do príbehu</div>
+    <div class="note">Nasaď si slúchadlá a ponor sa do príbehu</div>
     <div id="warn"></div>
+    </div>
   </div>
 </div>
 
@@ -787,7 +832,7 @@ async function resumeGame(){ menuMusicOff(700); if(!$('#pauseMenu').classList.co
 async function toMenu(){ saveProgress(); await hideCard($('#pauseMenu')); $('#topbar').classList.remove('on'); clearSub(); refreshMenu(); document.body.classList.add('inmenu'); $('#start').classList.remove('hidden'); materialize($('#start .card')); }
 async function newGame(){
   menuMusicOff(1200);
-  await ensureAudio($('#goYes').offsetParent?$('#goYes'):$('#go'), 'Začať novú hru'); clearSave();
+  await ensureAudio($('#goYes').offsetParent?$('#goYes'):$('#go'), 'Nová hra'); clearSave();
   await hideCard($('#start')); $('#topbar').classList.add('on'); $('#end').classList.add('hidden');
   for(const k in state) delete state[k];
   if(gameActive&&looping){ restart(); if(paused){ /* restart() resumes */ } return; }
