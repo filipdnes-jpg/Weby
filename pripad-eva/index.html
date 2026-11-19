@@ -140,49 +140,61 @@ body.inmenu #subs,body.inmenu #orb,body.inmenu #who{opacity:0 !important;pointer
 #pauseMenu{z-index:7;background:rgba(5,7,13,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 
 
-/* ---------- hlavné menu: ruka a padajúci odznak ---------- */
-#start{padding:0;background:#151515;overflow:hidden}
-#start .art{position:absolute;top:0;bottom:0;left:50%;height:100%;aspect-ratio:390/844;transform:translateX(-50%);z-index:0;pointer-events:none}
+/* ---------- hlavné menu (podľa návrhu: statické, bez dažďa a pohybu) ---------- */
+#start{padding:0;background:#151515;overflow:hidden;font-family:'Instrument Sans',Inter,var(--font);color:#f2f2f2}
+#start .art{position:absolute;inset:0;z-index:0;pointer-events:none}
+#start .art img{position:absolute;height:auto;max-width:none;user-select:none;-webkit-user-drag:none}
+#start .art .full{display:none}
+#start .art .layers{position:absolute;top:0;left:50%;width:390px;height:844px;margin-left:-195px}
+#start .art .hand{left:143px;top:92px;width:480px}
+#start .art .badge{left:-20px;top:358px;width:220px}
 #start .art{transition:opacity .4s ease}
 #start:has(#menuScenes:not([hidden])) .art,#start:has(#menuConfirm:not([hidden])) .art{opacity:.18}
-#start .art img{position:absolute;height:auto;max-width:none;user-select:none;-webkit-user-drag:none}
-#start .art .hand{left:36.67%;top:10.9%;width:123.08%;transform-origin:70% 45%;animation:handDrift 9s ease-in-out infinite alternate}
-#start .art .badge{left:-5.13%;top:42.42%;width:56.41%;transform-origin:50% 60%;animation:badgeFall 6.5s ease-in-out infinite alternate,badgeGlint 4.2s ease-in-out infinite}
-@keyframes handDrift{from{transform:translate3d(0,0,0) rotate(0deg)}to{transform:translate3d(-4px,6px,0) rotate(-1.2deg)}}
-@keyframes badgeFall{from{transform:translate3d(0,-6px,0) rotate(-3deg)}to{transform:translate3d(3px,10px,0) rotate(4deg)}}
-@keyframes badgeGlint{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
-#start::before{content:"";position:absolute;inset:-50% -10%;z-index:3;pointer-events:none;opacity:.06;
-  background:repeating-linear-gradient(104deg,transparent 0 46px,rgba(230,230,230,.55) 46px 47px,transparent 47px 93px);
-  background-size:180px 180px;animation:rainFall .6s linear infinite}
-@keyframes rainFall{from{transform:translate3d(0,0,0)}to{transform:translate3d(-40px,180px,0)}}
-@media (prefers-reduced-motion:reduce){#start .art img,#start::before{animation:none}}
-#start .grain{position:absolute;inset:0;z-index:4;opacity:.08;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-#start .card{z-index:5;width:min(460px,100%);height:100%;max-height:100%;border-radius:0;background:none !important;border:0 !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
-  display:flex;flex-direction:column;justify-content:space-between;padding:max(78px,calc(env(safe-area-inset-top) + 40px)) 28px max(40px,calc(env(safe-area-inset-bottom) + 20px));font-family:'Instrument Sans',var(--font);color:#f2f2f2}
-#start .title{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
-#start .card .k{font:500 12px/1 'Instrument Sans',var(--font);letter-spacing:.32em;color:#9a9a9a;padding-left:.32em;margin:0}
-#start .card h1{margin:0;font:500 clamp(42px,13vw,54px)/1.02 'Instrument Sans',var(--font);letter-spacing:-.02em;color:#f4f4f4;white-space:nowrap;text-shadow:0 2px 24px rgba(0,0,0,.7)}
-#start .tag{margin:4px 0 0;font-size:15px;line-height:1.45;color:#b5b5b5;max-width:270px;text-shadow:0 1px 10px rgba(0,0,0,.9)}
-#start .bottom{display:flex;flex-direction:column;align-items:center;background:radial-gradient(70% 60% at 50% 60%,rgba(21,21,21,.85),rgba(21,21,21,0) 75%)}
-#start .menu{width:min(320px,100%);gap:2px 26px;align-items:center}
-#start #menuMain{flex-direction:row;flex-wrap:wrap;justify-content:center}
-#start #menuMain::before{content:"";flex-basis:100%;height:0;order:-1}
+#start:has(#menuScenes:not([hidden])) .title{visibility:hidden}
+#start .card{z-index:5;position:relative;width:100%;height:100%;max-height:100%;border-radius:0;padding:0;background:none !important;border:0 !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;text-align:center}
+#start .title{position:absolute;left:0;right:0;top:92px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+#start .card .k{margin:0;font:500 13px/normal 'Instrument Sans',Inter,var(--font);letter-spacing:.32em;color:#9a9a9a;text-transform:none}
+#start .card h1{margin:0;font:500 52px/1.02 'Instrument Sans',Inter,var(--font);letter-spacing:-.02em;color:#f2f2f2;white-space:nowrap;text-transform:none;text-shadow:none}
+#start .tag{margin:6px 0 0;font-size:15px;line-height:1.45;color:#b5b5b5;max-width:270px}
+#start .tag .wide{display:none}
+#start .bottom{position:absolute;left:0;right:0;bottom:64px;display:flex;flex-direction:column;align-items:center;gap:18px}
+#start .menu{margin:0;width:auto;align-items:center}
+#start #menuMain{flex-direction:row;flex-wrap:wrap;justify-content:center;column-gap:28px;row-gap:0}
 #start #menuMain[hidden]{display:none}
-#start .cta{background:none;box-shadow:none;border:0;border-radius:0;padding:12px 4px;width:auto;color:#bdbdbd;font:400 15px/1 'Instrument Sans',var(--font);letter-spacing:0;text-transform:none;text-shadow:0 1px 8px rgba(0,0,0,.9);position:relative;cursor:pointer}
+#start #menuMain::before{content:"";flex-basis:100%;height:0;order:-1}
+#start .cta{appearance:none;background:none;box-shadow:none;border:0;border-radius:0;width:auto;padding:12px 4px;color:#bdbdbd;font:400 15px/1.5 'Instrument Sans',Inter,var(--font);letter-spacing:0;text-transform:none;text-shadow:none;cursor:pointer}
 #start .cta:hover{color:#fff}
 #start .cta.ghost{background:none;border:0}
-#start #cont:not([hidden]),#start #cont[hidden]+#go,#start #goYes{order:-2;align-self:center;display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 30px;margin-bottom:8px;border-radius:12px;background:#f4f4f4;color:#111;font-weight:500;font-size:16px;text-shadow:none;box-shadow:0 10px 40px rgba(0,0,0,.55)}
+#start #cont:not([hidden]),#start #cont[hidden]+#go,#start #goYes{order:-2;display:flex;align-items:center;gap:10px;height:52px;margin-bottom:18px;padding:0 30px;border-radius:12px;background:#f4f4f4;color:#111;font-weight:500;font-size:16px}
 #start #cont:not([hidden])::after,#start #cont[hidden]+#go::after,#start #goYes::after{content:"";width:14px;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' fill='none' stroke='%23111' stroke-width='1.6'%3E%3Cpath d='M4 10L10 4M5 4h5v5'/%3E%3C/svg%3E") center/contain no-repeat}
 #start .cta:active{transform:scale(.97)}
-#start #menuScenes,#start #menuConfirm{align-items:stretch;text-align:center}
+#start .musicBtn{position:static;width:auto;height:auto;border:0;border-radius:0;background:none;color:#bdbdbd;font:400 16px/1.5 inherit;padding:12px 4px}
+#start #menuScenes,#start #menuConfirm{width:min(320px,90vw);gap:6px;align-items:stretch;text-align:center}
 #start #menuConfirm #goYes{align-self:center}
-#start .confirm{font:500 20px 'Instrument Sans',var(--font);letter-spacing:-.01em;text-transform:none;color:#f2f2f2;text-align:center}
-#start .confirm small{font:400 13px 'Instrument Sans',var(--font);color:#9a9a9a}
+#start .confirm{font:500 20px 'Instrument Sans',Inter,var(--font);letter-spacing:-.01em;text-transform:none;color:#f2f2f2;text-align:center}
+#start .confirm small{font:400 13px 'Instrument Sans',Inter,var(--font);color:#9a9a9a}
 #start #sceneList{max-height:46vh !important;gap:0 !important;-webkit-mask-image:linear-gradient(180deg,transparent,#000 6%,#000 94%,transparent)}
 #start #sceneList .cta{font-size:14px !important;padding:12px 8px !important;border-bottom:1px solid rgba(255,255,255,.08) !important;width:100%}
-#start .note{display:flex;align-items:center;justify-content:center;gap:8px;font:400 12px 'Instrument Sans',var(--font);color:#8a8a8a;margin-top:12px;text-align:center}
+#start .note{display:flex;align-items:center;justify-content:center;gap:8px;margin:2px 0 0;font:400 12px 'Instrument Sans',Inter,var(--font);color:#8a8a8a}
 #start .note svg{width:14px;height:14px;flex:none}
-#start .musicBtn{position:fixed;z-index:8;top:max(14px,env(safe-area-inset-top));right:14px;border-color:rgba(255,255,255,.2);color:#cfcfcf;background:rgba(21,21,21,.5)}
+/* na šírku: návrh „Počítač“ */
+@media (min-aspect-ratio:4/3){
+  #start .art .layers{display:none}
+  #start .art .full{display:block;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:60% 0}
+  #start .title{left:96px;right:auto;top:190px;width:460px;align-items:flex-start;text-align:left;gap:18px}
+  #start .card .k{position:fixed;top:54px;left:96px;font-size:12px;font-weight:400;letter-spacing:.3em;line-height:1}
+  #start .card h1{font-size:84px;line-height:.98;letter-spacing:-.025em}
+  #start .tag{margin:0;font-size:18px;line-height:1.5;max-width:none}
+  #start .tag .narrow{display:none}#start .tag .wide{display:inline}
+  #start .bottom{left:96px;right:auto;bottom:auto;top:calc(190px + 82px + 18px + 54px + 36px);align-items:flex-start}
+  #start #menuMain{justify-content:flex-start;align-items:center;flex-wrap:nowrap}
+  #start #menuMain::before{display:none}
+  #start #menuMain .cta{font-size:16px;padding:12px 0}
+  #start #cont:not([hidden]),#start #cont[hidden]+#go{padding:0 30px !important;margin-bottom:0}
+  #start #menuScenes,#start #menuConfirm{width:360px}
+  #start #menuMain .musicBtn{position:fixed;top:40px;right:96px;width:44px;height:44px;border:1px solid #3a3a3a;border-radius:22px;padding:0;display:flex;align-items:center;justify-content:center}
+  #start .note{position:fixed;top:40px;right:164px;height:44px;margin:0;font-size:14px;color:#9a9a9a}
+}
 #warn{display:none;margin-top:12px;font-size:13px;color:#ffb08a}
 .summary{text-align:left;margin:4px 0 22px;display:flex;flex-direction:column;gap:8px}
 .summary .row{background:rgba(255,255,255,.06);border-radius:14px;padding:11px 13px;font-size:14px;line-height:1.35}
@@ -234,20 +246,19 @@ body.inmenu #subs,body.inmenu #orb,body.inmenu #who{opacity:0 !important;pointer
 </div>
 
 <div id="start">
-  <div class="art"><img class="hand" src="s/ruka.png" alt=""><img class="badge" src="s/odznak.png" alt=""></div>
-  <div class="grain"></div>
-  <button class="musicBtn" id="musicBtn" aria-label="Hudba v pozadí">♪</button>
+  <div class="art"><img class="full" src="s/menu_odznak.jpg" alt=""><div class="layers"><img class="hand" src="s/ruka.png" alt=""><img class="badge" src="s/odznak.png" alt=""></div></div>
   <div class="card">
     <div class="title">
       <div class="k">AUDIO DETEKTÍVKA</div>
       <h1>Prípad Eva</h1>
-      <p class="tag">Najlepšia kamarátka ti volá o&nbsp;1:47. Čo si ochotná stratiť?</p>
+      <p class="tag">Najlepšia kamarátka ti volá o&nbsp;1:47. <span class="narrow">Čo si ochotná stratiť?</span><span class="wide">Čo všetko si ochotná spraviť?</span></p>
     </div>
     <div class="bottom">
     <div class="menu" id="menuMain">
       <button class="cta" id="cont" hidden>Pokračovať</button>
       <button class="cta" id="go">Nová hra</button>
-      <button class="cta ghost" id="scenesBtn">Vybrať scénu</button>
+      <button class="cta ghost" id="scenesBtn">Kapitoly</button>
+      <button class="musicBtn" id="musicBtn" aria-label="Hudba v pozadí">♪</button>
     </div>
     <div class="menu" id="menuScenes" hidden>
       <div class="confirm">Vybrať scénu<small>Len na testovanie. Voľby pred scénou sa nezapočítajú.</small></div>
