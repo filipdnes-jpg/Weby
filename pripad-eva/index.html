@@ -146,8 +146,14 @@ body.inmenu #subs,body.inmenu #orb,body.inmenu #who{opacity:0 !important;pointer
 #start .art img{position:absolute;height:auto;max-width:none;user-select:none;-webkit-user-drag:none}
 #start .art .full{display:none}
 #start .art .layers{position:absolute;top:0;left:50%;width:390px;height:844px;margin-left:-195px}
-#start .art .hand{left:143px;top:92px;width:480px}
-#start .art .badge{left:-20px;top:358px;width:220px}
+#start .art .photo{left:-345px;top:42px;width:990px}
+#start .art .layers{transform-origin:50% 0}
+@media (max-height:800px){#start .art .layers{transform:scale(.9)}}
+@media (max-height:740px){#start .art .layers{transform:scale(.82)}#start .card .title{top:56px}#start .card .bottom{bottom:36px}}
+@media (max-height:660px){#start .art .layers{transform:scale(.74)}}
+#start .art .layers::before,#start .art .layers::after{content:"";position:absolute;left:-400px;right:-400px;z-index:1}
+#start .art .layers::before{top:25px;height:70px;background:linear-gradient(#151515,rgba(21,21,21,0))}
+#start .art .layers::after{top:625px;height:90px;background:linear-gradient(rgba(21,21,21,0),#151515)}
 #start .art{transition:opacity .4s ease}
 #start:has(#menuScenes:not([hidden])) .art,#start:has(#menuConfirm:not([hidden])) .art{opacity:.18}
 #start:has(#menuScenes:not([hidden])) .title{visibility:hidden}
@@ -246,7 +252,7 @@ body.inmenu #subs,body.inmenu #orb,body.inmenu #who{opacity:0 !important;pointer
 </div>
 
 <div id="start">
-  <div class="art"><img class="full" src="s/menu_odznak.jpg" alt=""><div class="layers"><img class="hand" src="s/ruka.png" alt=""><img class="badge" src="s/odznak.png" alt=""></div></div>
+  <div class="art"><img class="full" src="s/menu_odznak.jpg" alt=""><div class="layers"><img class="photo" src="s/menu_odznak.jpg" alt=""></div></div>
   <div class="card">
     <div class="title">
       <div class="k">AUDIO DETEKTÍVKA</div>
