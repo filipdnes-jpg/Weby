@@ -4,7 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#05060a">
-<title>Hlas v slúchadle – Scéna v aute</title>
+<title>Prípad Eva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#05060a; --fg:rgba(255,255,255,.94); --fg2:rgba(255,255,255,.62); --fg3:rgba(255,255,255,.38);
@@ -137,44 +140,49 @@ body.inmenu #subs,body.inmenu #orb,body.inmenu #who{opacity:0 !important;pointer
 #pauseMenu{z-index:7;background:rgba(5,7,13,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 
 
-/* ---------- ilustrované hlavné menu ---------- */
-#start{padding:0;background:#06080c;overflow:hidden}
-#start .art{position:absolute;inset:0;z-index:0;pointer-events:none}
-#start .art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:22% 55%;filter:saturate(.85) contrast(1.05);transform:scale(1.04);animation:artPan 34s ease-in-out infinite alternate}
-@keyframes artPan{0%,8%{object-position:22% 55%}92%,100%{object-position:88% 50%}}
-@media (prefers-reduced-motion:reduce){#start .art img,#start .art::after{animation:none}}
-@media (min-aspect-ratio:4/3){#start .art img{animation:artDrift 40s ease-in-out infinite alternate;object-position:50% 50%}}
-@keyframes artDrift{from{transform:scale(1.03)}to{transform:scale(1.1) translate3d(-1.5%,-1%,0)}}
-#start .art::before{content:"";position:absolute;inset:0;z-index:2;background:
-  linear-gradient(180deg,rgba(6,8,12,.92) 0%,rgba(6,8,12,.35) 26%,rgba(6,8,12,0) 42%,rgba(6,8,12,.15) 58%,rgba(6,8,12,.88) 80%,#06080c 100%),
-  radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.75) 100%)}
-#start .art::after{content:"";position:absolute;inset:-50% -10%;z-index:3;opacity:.13;
-  background:repeating-linear-gradient(104deg,transparent 0 46px,rgba(200,215,230,.5) 46px 47px,transparent 47px 93px);
-  background-size:180px 180px;animation:rainFall .55s linear infinite}
+/* ---------- hlavné menu: ruka a padajúci odznak ---------- */
+#start{padding:0;background:#151515;overflow:hidden}
+#start .art{position:absolute;top:0;bottom:0;left:50%;height:100%;aspect-ratio:390/844;transform:translateX(-50%);z-index:0;pointer-events:none}
+#start .art{transition:opacity .4s ease}
+#start:has(#menuScenes:not([hidden])) .art,#start:has(#menuConfirm:not([hidden])) .art{opacity:.18}
+#start .art img{position:absolute;height:auto;max-width:none;user-select:none;-webkit-user-drag:none}
+#start .art .hand{left:36.67%;top:10.9%;width:123.08%;transform-origin:70% 45%;animation:handDrift 9s ease-in-out infinite alternate}
+#start .art .badge{left:-5.13%;top:42.42%;width:56.41%;transform-origin:50% 60%;animation:badgeFall 6.5s ease-in-out infinite alternate,badgeGlint 4.2s ease-in-out infinite}
+@keyframes handDrift{from{transform:translate3d(0,0,0) rotate(0deg)}to{transform:translate3d(-4px,6px,0) rotate(-1.2deg)}}
+@keyframes badgeFall{from{transform:translate3d(0,-6px,0) rotate(-3deg)}to{transform:translate3d(3px,10px,0) rotate(4deg)}}
+@keyframes badgeGlint{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+#start::before{content:"";position:absolute;inset:-50% -10%;z-index:3;pointer-events:none;opacity:.06;
+  background:repeating-linear-gradient(104deg,transparent 0 46px,rgba(230,230,230,.55) 46px 47px,transparent 47px 93px);
+  background-size:180px 180px;animation:rainFall .6s linear infinite}
 @keyframes rainFall{from{transform:translate3d(0,0,0)}to{transform:translate3d(-40px,180px,0)}}
-#start .grain{position:absolute;inset:0;z-index:4;opacity:.09;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+@media (prefers-reduced-motion:reduce){#start .art img,#start::before{animation:none}}
+#start .grain{position:absolute;inset:0;z-index:4;opacity:.08;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 #start .card{z-index:5;width:min(460px,100%);height:100%;max-height:100%;border-radius:0;background:none !important;border:0 !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
-  display:flex;flex-direction:column;justify-content:space-between;padding:max(48px,env(safe-area-inset-top)) 28px max(26px,env(safe-area-inset-bottom))}
-#start .title{text-align:center}
-#start .card .k{font:600 11px/1 Georgia,'Times New Roman',serif;letter-spacing:.42em;color:#b9ad90;margin-top:10px;padding-left:.42em}
-#start .card h1{margin:0;font:400 clamp(38px,11vw,54px)/1.05 'Cinzel','Trajan Pro',Georgia,'Times New Roman',serif;letter-spacing:.18em;padding-left:.18em;white-space:nowrap;text-transform:uppercase;color:#ece2c8;text-shadow:0 2px 18px rgba(0,0,0,.8),0 0 1px rgba(0,0,0,.9)}
-#start .orn{display:block;width:min(260px,70%);height:22px;margin:14px auto 0;color:#cdbf9c;opacity:.9}
-#start .bottom{display:flex;flex-direction:column;align-items:center}
-#start .menu{width:min(300px,100%);gap:4px;align-items:stretch}
-#start .cta{background:none;box-shadow:none;border:0;border-radius:0;padding:13px 10px;color:#ddd3bb;font:400 16px/1 Georgia,'Times New Roman',serif;letter-spacing:.16em;text-transform:uppercase;text-shadow:0 1px 8px rgba(0,0,0,.9);position:relative}
+  display:flex;flex-direction:column;justify-content:space-between;padding:max(78px,calc(env(safe-area-inset-top) + 40px)) 28px max(40px,calc(env(safe-area-inset-bottom) + 20px));font-family:'Instrument Sans',var(--font);color:#f2f2f2}
+#start .title{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+#start .card .k{font:500 12px/1 'Instrument Sans',var(--font);letter-spacing:.32em;color:#9a9a9a;padding-left:.32em;margin:0}
+#start .card h1{margin:0;font:500 clamp(42px,13vw,54px)/1.02 'Instrument Sans',var(--font);letter-spacing:-.02em;color:#f4f4f4;white-space:nowrap;text-shadow:0 2px 24px rgba(0,0,0,.7)}
+#start .tag{margin:4px 0 0;font-size:15px;line-height:1.45;color:#b5b5b5;max-width:270px;text-shadow:0 1px 10px rgba(0,0,0,.9)}
+#start .bottom{display:flex;flex-direction:column;align-items:center;background:radial-gradient(70% 60% at 50% 60%,rgba(21,21,21,.85),rgba(21,21,21,0) 75%)}
+#start .menu{width:min(320px,100%);gap:2px 26px;align-items:center}
+#start #menuMain{flex-direction:row;flex-wrap:wrap;justify-content:center}
+#start #menuMain::before{content:"";flex-basis:100%;height:0;order:-1}
+#start #menuMain[hidden]{display:none}
+#start .cta{background:none;box-shadow:none;border:0;border-radius:0;padding:12px 4px;width:auto;color:#bdbdbd;font:400 15px/1 'Instrument Sans',var(--font);letter-spacing:0;text-transform:none;text-shadow:0 1px 8px rgba(0,0,0,.9);position:relative;cursor:pointer}
+#start .cta:hover{color:#fff}
 #start .cta.ghost{background:none;border:0}
-#start #cont:not([hidden]),#start #cont[hidden]+#go,#start #goYes{color:#f3ead2;background:linear-gradient(180deg,rgba(28,32,36,.88),rgba(14,16,20,.92));border:1px solid #bfae86;border-radius:999px;margin-bottom:6px;box-shadow:0 0 0 3px rgba(10,12,15,.6),0 0 0 4px rgba(191,174,134,.35),0 8px 30px rgba(0,0,0,.6)}
-#start #cont:not([hidden])::before,#start #cont[hidden]+#go::before,#start #goYes::before,
-#start #cont:not([hidden])::after,#start #cont[hidden]+#go::after,#start #goYes::after{content:"◆";position:absolute;top:50%;transform:translateY(-50%);font-size:9px;color:#cdbf9c}
-#start #cont:not([hidden])::before,#start #cont[hidden]+#go::before,#start #goYes::before{left:16px}
-#start #cont:not([hidden])::after,#start #cont[hidden]+#go::after,#start #goYes::after{right:16px}
+#start #cont:not([hidden]),#start #cont[hidden]+#go,#start #goYes{order:-2;align-self:center;display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 30px;margin-bottom:8px;border-radius:12px;background:#f4f4f4;color:#111;font-weight:500;font-size:16px;text-shadow:none;box-shadow:0 10px 40px rgba(0,0,0,.55)}
+#start #cont:not([hidden])::after,#start #cont[hidden]+#go::after,#start #goYes::after{content:"";width:14px;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' fill='none' stroke='%23111' stroke-width='1.6'%3E%3Cpath d='M4 10L10 4M5 4h5v5'/%3E%3C/svg%3E") center/contain no-repeat}
 #start .cta:active{transform:scale(.97)}
-#start .confirm{font:400 18px Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#ece2c8;text-align:center}
-#start .confirm small{font:italic 13px Georgia,serif;letter-spacing:0;text-transform:none;color:#b9ad90}
+#start #menuScenes,#start #menuConfirm{align-items:stretch;text-align:center}
+#start #menuConfirm #goYes{align-self:center}
+#start .confirm{font:500 20px 'Instrument Sans',var(--font);letter-spacing:-.01em;text-transform:none;color:#f2f2f2;text-align:center}
+#start .confirm small{font:400 13px 'Instrument Sans',var(--font);color:#9a9a9a}
 #start #sceneList{max-height:46vh !important;gap:0 !important;-webkit-mask-image:linear-gradient(180deg,transparent,#000 6%,#000 94%,transparent)}
-#start #sceneList .cta{font-size:13px !important;padding:11px 8px !important;letter-spacing:.08em;border-bottom:1px solid rgba(205,191,156,.14) !important}
-#start .note{font:italic 12px Georgia,serif;color:#9d9277;margin-top:12px;text-align:center}
-#start .musicBtn{position:fixed;z-index:8;top:max(14px,env(safe-area-inset-top));right:14px;border-color:rgba(205,191,156,.4);color:#ddd3bb;background:rgba(10,12,15,.45)}
+#start #sceneList .cta{font-size:14px !important;padding:12px 8px !important;border-bottom:1px solid rgba(255,255,255,.08) !important;width:100%}
+#start .note{display:flex;align-items:center;justify-content:center;gap:8px;font:400 12px 'Instrument Sans',var(--font);color:#8a8a8a;margin-top:12px;text-align:center}
+#start .note svg{width:14px;height:14px;flex:none}
+#start .musicBtn{position:fixed;z-index:8;top:max(14px,env(safe-area-inset-top));right:14px;border-color:rgba(255,255,255,.2);color:#cfcfcf;background:rgba(21,21,21,.5)}
 #warn{display:none;margin-top:12px;font-size:13px;color:#ffb08a}
 .summary{text-align:left;margin:4px 0 22px;display:flex;flex-direction:column;gap:8px}
 .summary .row{background:rgba(255,255,255,.06);border-radius:14px;padding:11px 13px;font-size:14px;line-height:1.35}
@@ -226,14 +234,14 @@ body.inmenu #subs,body.inmenu #orb,body.inmenu #who{opacity:0 !important;pointer
 </div>
 
 <div id="start">
-  <div class="art"><img src="s/menu.jpg" alt=""></div>
+  <div class="art"><img class="hand" src="s/ruka.png" alt=""><img class="badge" src="s/odznak.png" alt=""></div>
   <div class="grain"></div>
   <button class="musicBtn" id="musicBtn" aria-label="Hudba v pozadí">♪</button>
   <div class="card">
     <div class="title">
+      <div class="k">AUDIO DETEKTÍVKA</div>
       <h1>Prípad Eva</h1>
-      <svg class="orn" viewBox="0 0 260 22" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0 11H96M164 11H260"/><path d="M130 2l9 9-9 9-9-9z" fill="rgba(205,191,156,.15)"/><path d="M130 7l4 4-4 4-4-4z" fill="currentColor"/><circle cx="110" cy="11" r="4.5"/><circle cx="150" cy="11" r="4.5"/><path d="M96 11h9.5M154.5 11H164"/><circle cx="110" cy="11" r="1.2" fill="currentColor"/><circle cx="150" cy="11" r="1.2" fill="currentColor"/></svg>
-      <div class="k">Audio detektívka</div>
+      <p class="tag">Najlepšia kamarátka ti volá o&nbsp;1:47. Čo si ochotná stratiť?</p>
     </div>
     <div class="bottom">
     <div class="menu" id="menuMain">
@@ -251,7 +259,7 @@ body.inmenu #subs,body.inmenu #orb,body.inmenu #who{opacity:0 !important;pointer
       <button class="cta" id="goYes">Áno, začať odznova</button>
       <button class="cta ghost" id="goNo">Zrušiť</button>
     </div>
-    <div class="note">Nasaď si slúchadlá a ponor sa do príbehu</div>
+    <div class="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg>Hraj so slúchadlami</div>
     <div id="warn"></div>
     </div>
   </div>
